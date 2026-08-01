@@ -34,9 +34,16 @@ Installs are project-level by default. Useful flags:
 
 ## Where skills land, per harness
 
-Each harness reads skills from its own directory, and the installer writes to whichever ones it detects. In Claude Code that is `.claude/skills/<name>/` in the project, or `~/.claude/skills/<name>/` with `-g`.
+Each harness reads skills from its own directory, and the installer writes to whichever ones it detects:
 
-For the exact paths on your machine, read the installer output — it prints every file it wrote — or run:
+| Harness | Project install | Global install (`-g`) |
+| --- | --- | --- |
+| Claude Code | `.claude/skills/<name>/` | `~/.claude/skills/<name>/` |
+| Codex CLI | `.agents/skills/<name>/` | `~/.agents/skills/<name>/` |
+
+Cursor and Gemini CLI use their own directories; the installer prints the exact destination for each.
+
+For the paths on your machine, read the installer output — it prints every file it wrote — or run:
 
 ```bash
 npx skills list

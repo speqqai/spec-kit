@@ -1,6 +1,6 @@
 # Installation
 
-Speqq Spec-Kit is a set of eight [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn your coding agent into a spec-driven planner whose specs live in Speqq instead of loose markdown files. One install covers every supported harness.
+Speqq Spec-Kit is a set of fourteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn your coding agent into a spec-driven planner whose specs live in Speqq instead of loose markdown files. One install covers every supported harness.
 
 ## Install
 
@@ -8,7 +8,7 @@ Speqq Spec-Kit is a set of eight [Agent Skills](https://agentskills.io) (`SKILL.
 npx skills add speqqai/spec-kit
 ```
 
-The `skills` CLI detects the coding agents you have set up, asks you to confirm which get the skills, and installs all eight into each one you confirm. Each skill is a folder containing a `SKILL.md`; the agent loads it when the task matches the skill's description or when you invoke it by name.
+The `skills` CLI detects the coding agents you have set up, asks you to confirm which get the skills, and installs all fourteen into each one you confirm. Each skill is a folder containing a `SKILL.md`; the agent loads it when the task matches the skill's description or when you invoke it by name.
 
 Installs are project-level by default. Useful flags:
 
@@ -31,6 +31,12 @@ Installs are project-level by default. Useful flags:
 | `spec-implement` | Executes the Implementation plan, branch-per-feature, flips row statuses live |
 | `spec-converge` | Reconciles code against the spec; appends drift as new plan steps |
 | `spec-queue` | Files plan steps into the Speqq queue with dedup and priority |
+| `spec-init` | Creates the spec shell, queue item, link, priority and in-progress status |
+| `spec-research` | Reads what exists today and records the findings worth keeping |
+| `spec-start` | Opens a session on a spec and records what the run is going after |
+| `spec-pause` | Closes a session: where the work stands, and honest row statuses |
+| `spec-snippet` | Appends one line to a spec's memory, on demand |
+| `spec-resume` | Reads a spec's memory and reports where it stopped |
 
 ## Where skills land, per harness
 

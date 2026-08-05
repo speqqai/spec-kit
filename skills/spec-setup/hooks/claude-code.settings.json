@@ -21,6 +21,29 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=claude-code \"$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/spec-memory.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=claude-code \"$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/spec-memory.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
     ]
   }
 }

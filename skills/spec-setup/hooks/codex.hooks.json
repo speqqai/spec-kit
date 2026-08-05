@@ -1,5 +1,5 @@
 {
-  "description": "Speqq session context at session start (Codex >= 0.124.0).",
+  "description": "Speqq session context at session start; memory writes at compaction and session end (Codex >= 0.124.0).",
   "hooks": {
     "SessionStart": [
       {
@@ -20,6 +20,31 @@
             "type": "command",
             "command": "./.claude/skills/spec-setup/hooks/session-start.sh",
             "statusMessage": "Refreshing Speqq context",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex ./.claude/skills/spec-setup/hooks/spec-memory.sh",
+            "statusMessage": "Recording Speqq memory",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex ./.claude/skills/spec-setup/hooks/spec-memory.sh",
+            "statusMessage": "Recording Speqq memory",
             "timeout": 15
           }
         ]

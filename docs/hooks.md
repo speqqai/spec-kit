@@ -53,10 +53,61 @@ previous thread skips `SessionStart` entirely
 ([openai/codex#24228](https://github.com/openai/codex/issues/24228)); starting
 a genuinely new session is the workaround.
 
+## spec-memory
+
+The pack also ships one write hook, `spec-memory.sh`. Where the session-start
+script reads Speqq into the session, this one writes the session back — at the
+two moments its context is about to be lost:
+
+| Event | When it fires | The recorded line ends up saying |
+| --- | --- | --- |
+| `PreCompact` (`manual\|auto`) | right before the context window is compacted | `compacting on <branch> - dirty: <n> files (<up to 3 names>)` |
+| `SessionEnd` | when the session ends | `session ended on <branch> - dirty: <n> files` |
+
+The hook appends that one line to the MEMORY.md of the **active spec** — the
+workspace queue item whose branch field exactly matches the current git
+branch, through its linked spec document. The server stamps the time and
+composes the full line; with the attribution the wiring supplies it reads:
+
+```
+2026-08-05 14:02  claude-code · a1b2c3d4 · compacting on feat/checkout - dirty: 3 files (a.ts, b.ts, c.md)
+```
+
+`claude-code` is the agent name the wiring passes as `SPEQQ_HOOK_AGENT`
+(`codex` in the Codex wiring), and `a1b2c3d4` is the first eight characters of
+the harness session id — the same short form the connection-status line
+prints, so a memory line can be traced back to the session that wrote it.
+Attribution travels as one unit: if either half is missing or malformed, the
+hook says so on stderr and records the line unattributed rather than losing
+it.
+
+Every miss is a skip, not a failure: no credentials, no current git branch,
+no queue item claiming the branch — one stderr line naming the cause, exit 0,
+nothing written and nothing guessed. And unlike the session-start script this
+hook injects nothing: **stdout stays empty on every path**. Recall after
+compaction is the SessionStart hooks' job — the `compact` matcher re-injects
+the workspace context, and the `spec-*` skills read MEMORY.md itself when
+asked. The write is best-effort under the same shared deadline as everything
+else: a slow server costs the memory line, never the compaction or the exit.
+
+The wiring adds a `PreCompact` entry (matcher `manual|auto`) and a
+`SessionEnd` entry to the same config files as the session-start hooks, each
+running `spec-memory.sh` with `SPEQQ_HOOK_AGENT` set in the command string.
+To verify by hand:
+
+```bash
+printf '{"session_id":"install-check","hook_event_name":"SessionEnd","reason":"other"}' \
+  | SPEQQ_HOOK_AGENT=claude-code sh .claude/skills/spec-setup/hooks/spec-memory.sh
+```
+
+Success is silent — the line lands in the spec's MEMORY.md and nothing is
+printed. Anything skipped or broken is one stderr line naming the cause;
+stdout is empty either way.
+
 ## The four invariants
 
-Every path through the script holds four rules. They are what make a hook safe
-to run before every session:
+Every path through both scripts holds four rules. They are what make a hook
+safe to run around every session:
 
 1. **It never blocks a session.** Every failure exits 0. Missing credentials,
    an unreachable server, a rejected token — the session starts anyway, just
@@ -107,11 +158,12 @@ Everything lives in the skill's own directory,
 
 | File | Role |
 | --- | --- |
-| `session-start.sh` | The one executable the harness calls — parses the hook stdin, resolves credentials, opens one MCP session, runs the steps under the shared deadline |
+| `session-start.sh` | The read hook, fired at session start — parses the hook stdin, resolves credentials, opens one MCP session, runs the steps under the shared deadline |
 | `lib.sh` | Shared plumbing: credentials resolution, deadline, transport — sourced, never executed |
 | `speqq-setup.sh` | The connection-status step |
 | `spec-workspace-context.sh` | The workspace-context step |
-| `claude-code.settings.json` | The `SessionStart` entries to merge into `.claude/settings.json` |
+| `spec-memory.sh` | The write hook — records one memory line at `PreCompact` and `SessionEnd` |
+| `claude-code.settings.json` | The `SessionStart`, `PreCompact`, and `SessionEnd` entries to merge into `.claude/settings.json` |
 | `codex.hooks.json` | The same shape for `~/.codex/hooks.json` |
 
 Requires `curl` and `python3` on `PATH`, and `git` to read the branch (no git,
@@ -140,8 +192,8 @@ its output.
 
 ## Remove
 
-Delete the merged `SessionStart` entries from `.claude/settings.json` (or
-`~/.codex/hooks.json`) and restart the harness. Nothing else is left behind:
+Delete the merged `SessionStart`, `PreCompact`, and `SessionEnd` entries from
+`.claude/settings.json` (or `~/.codex/hooks.json`) and restart the harness. Nothing else is left behind:
 the hooks write no state, no cache, and no files outside a temp directory
 removed on exit. The skills keep working without them.
 

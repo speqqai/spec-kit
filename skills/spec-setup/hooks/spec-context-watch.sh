@@ -34,6 +34,14 @@ SM_NUDGE_PCT=${SPEQQ_CONTEXT_NUDGE_PCT:-30,60,85}
 SM_WINDOW=${SPEQQ_CONTEXT_WINDOW:-200000}
 SM_AGENT=${SPEQQ_HOOK_AGENT:-claude-code}
 SM_BRANCH=$(git branch --show-current 2>/dev/null) || SM_BRANCH=''
+# The workspace id, when discoverable without a network call: the env wins,
+# else the one non-secret line of the credentials file. The token itself is
+# never read into a variable.
+SM_WORKSPACE=${SPEQQ_WORKSPACE_ID:-}
+if [ -z "$SM_WORKSPACE" ]; then
+  SM_CREDS=${SPEQQ_CREDENTIALS_FILE:-$HOME/.speqq/credentials}
+  [ -f "$SM_CREDS" ] && SM_WORKSPACE=$(sed -n 's/^SPEQQ_WORKSPACE_ID=//p' "$SM_CREDS" | tail -n 1 | tr -d '\r')
+fi
 
 command -v python3 >/dev/null 2>&1 || exit 0
 
@@ -48,6 +56,7 @@ import tempfile
 RUNGS = sorted(float(p) for p in sys.argv[1].split(",") if p.strip())
 WINDOW = int(sys.argv[2])
 AGENT, BRANCH = sys.argv[3], sys.argv[4]
+WORKSPACE = sys.argv[5] if len(sys.argv) > 5 else ""
 if not RUNGS:
     raise SystemExit(0)
 
@@ -121,6 +130,10 @@ with open(flag, "w") as handle:
     handle.write("%.1f" % rung)
 
 where = BRANCH if BRANCH else "the current branch"
+if WORKSPACE:
+    lookup = "queue_read in workspace %s lists the queue" % WORKSPACE
+else:
+    lookup = "list_workspaces then queue_read list the queue"
 if final:
     opening = (
         "Your context window is %.0f%% full and will be auto-compacted soon. "
@@ -132,12 +145,14 @@ else:
         "update so the memory log tells the story of this session: " % pct
     )
 instruction = opening + (
-    "resolve the active spec (the queue item whose branch is %s - queue_read shows "
-    "each item, its branch, and its linked spec) and call spec_memory_append on it "
-    "with agent \"%s\", session_id \"%s\", and 2-4 sentences in your own words: what "
-    "you are doing, the current state (what works, what is unfinished), and the "
-    "immediate next step. Then continue the task. If no queue item claims this "
-    "branch, skip the append and continue." % (where, AGENT, session)
+    "first find the queue item whose branch is %s (%s), then take that item"
+    "\u2019s linked_document_id - that is the active spec - and call "
+    "spec_memory_append on it with agent \"%s\", session_id \"%s\", and 2-4 "
+    "sentences in your own words: what you are doing, the current state (what "
+    "works, what is unfinished), and the immediate next step. Then continue the "
+    "task. If no queue item claims this branch, or the Speqq queue or "
+    "spec_memory_append tools are not available in this session, skip the "
+    "update and continue." % (where, lookup, AGENT, session)
 )
 print(
     json.dumps(
@@ -151,5 +166,5 @@ print(
 )
 '
 
-python3 -c "$SM_WATCH_PYTHON" "$SM_NUDGE_PCT" "$SM_WINDOW" "$SM_AGENT" "$SM_BRANCH" 2>/dev/null || :
+python3 -c "$SM_WATCH_PYTHON" "$SM_NUDGE_PCT" "$SM_WINDOW" "$SM_AGENT" "$SM_BRANCH" "$SM_WORKSPACE" 2>/dev/null || :
 exit 0

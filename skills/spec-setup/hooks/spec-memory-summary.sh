@@ -27,17 +27,26 @@ run_memory_summary() {
   sms_session=${SPEQQ_HARNESS_SESSION_ID:-}
   sms_transcript=${SPEQQ_TRANSCRIPT_PATH:-}
 
+  sms_workspace=${WORKSPACE_ID:-}
+  if [ -n "$sms_workspace" ]; then
+    sms_lookup="queue_read in workspace $sms_workspace lists the queue"
+  else
+    sms_lookup="list_workspaces then queue_read list the queue"
+  fi
+
   cat <<INSTRUCTION
 
 Your context was just compacted. Before continuing the task, record where the
 work stands so the next session (or another agent) can resume from it:
-1. Resolve the active spec: the queue item whose branch is ${sms_branch:-"this checkout's branch"}
-   (queue_read shows each item's branch and linked spec).
-2. Call spec_memory_append on that spec with agent "$sms_agent"${sms_session:+, session_id "$sms_session"}
+1. Find the queue item whose branch is ${sms_branch:-"the current checkout branch"}
+   ($sms_lookup).
+2. Take that item's linked_document_id - that is the active spec - and call
+   spec_memory_append on it with agent "$sms_agent"${sms_session:+, session_id "$sms_session"},
    and 2-4 sentences in your own words: what you were doing, the current
    state (what works, what is unfinished), and the immediate next step.
 3. Then continue the task you were on.
-If no queue item claims this branch, skip the append and continue.${sms_transcript:+
+If no queue item claims this branch, or the Speqq queue or spec_memory_append
+tools are not available in this session, skip the update and continue.${sms_transcript:+
 Compaction compressed your window, not the record: the complete pre-compaction
 conversation is preserved at $sms_transcript
 - Read its tail first if the compacted summary is missing details you need.}

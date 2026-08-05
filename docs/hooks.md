@@ -31,16 +31,22 @@ where nobody thinks to ask for it.
 Both harnesses fire the same script on session start; the script reads the
 hook's stdin JSON (`session_id`, `source`) to tell the cases apart.
 
-| Session event | Connection status | Workspace context |
-| --- | --- | --- |
-| New session (`startup`) | printed | printed |
-| Resumed session (`resume`) | printed | printed |
-| Cleared session (`clear`) | printed | printed |
-| After compaction (`compact`) | skipped | printed |
+| Session event | Connection status | Workspace context | Summary instruction |
+| --- | --- | --- | --- |
+| New session (`startup`) | printed | printed | — |
+| Resumed session (`resume`) | printed | printed | — |
+| Cleared session (`clear`) | printed | printed | — |
+| After compaction (`compact`) | skipped | printed | printed |
 
 The compact row is deliberate: a compaction squeezes the context window
 mid-session, so the orientation is re-injected — but the connection does not
-need re-announcing.
+need re-announcing. And because the agent is the only writer that can say
+what the work *means*, the compact firing also injects a direct instruction:
+resolve the active spec from the current branch and append a 2-4 sentence
+summary — what it was doing, the current state, the next step — with
+`spec_memory_append`, then continue. The division of labor is strict: shell
+records facts, the agent records meaning, and the injection is the bridge
+that makes the second one happen without anyone asking.
 
 **Claude Code** wires this as two `hooks.SessionStart` entries (matchers
 `startup|resume|clear` and `compact`) running

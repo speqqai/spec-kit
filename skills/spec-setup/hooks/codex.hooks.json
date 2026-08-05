@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./.claude/skills/spec-setup/hooks/session-start.sh",
+            "command": "SPEQQ_HOOK_AGENT=codex ./.claude/skills/spec-setup/hooks/session-start.sh",
             "statusMessage": "Connecting to Speqq",
             "timeout": 15
           }
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./.claude/skills/spec-setup/hooks/session-start.sh",
+            "command": "SPEQQ_HOOK_AGENT=codex ./.claude/skills/spec-setup/hooks/session-start.sh",
             "statusMessage": "Refreshing Speqq context",
             "timeout": 15
           }

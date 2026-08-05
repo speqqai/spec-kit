@@ -85,6 +85,11 @@ main() {
     run_step speqq-setup.sh run_speqq_setup
   fi
   run_step spec-workspace-context.sh run_workspace_context
+  if [ "${SPEQQ_SESSION_SOURCE:-}" = 'compact' ]; then
+    # Post-compaction only: instruct the AGENT to write a real summary to
+    # spec memory — the one writer that can say what the work means.
+    run_step spec-memory-summary.sh run_memory_summary
+  fi
   # A future step drops in here as one more run_step line.
 
   exit 0

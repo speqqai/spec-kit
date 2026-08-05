@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/session-start.sh\"",
+            "command": "SPEQQ_HOOK_AGENT=claude-code \"$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/session-start.sh\"",
             "timeout": 15
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/session-start.sh\"",
+            "command": "SPEQQ_HOOK_AGENT=claude-code \"$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/session-start.sh\"",
             "timeout": 15
           }
         ]

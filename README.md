@@ -2,7 +2,7 @@
 
 **Spec-driven development for coding agents — with every spec living in Speqq, not in loose markdown files.**
 
-Speqq Spec-Kit is a set of fourteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn Claude Code, Codex CLI, Cursor, or Gemini CLI into a spec-driven planner. It follows the lineage of GitHub's spec-kit with one fundamental difference: every artifact lands in a Speqq workspace over MCP — live collaboration, a real work queue, row-level execution status. No `specs/` directory. No state files. Zero local state.
+Speqq Spec-Kit is a set of fifteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn Claude Code, Codex CLI, Cursor, or Gemini CLI into a spec-driven planner. It follows the lineage of GitHub's spec-kit with one fundamental difference: every artifact lands in a Speqq workspace over MCP — live collaboration, a real work queue, row-level execution status. No `specs/` directory. No state files. Zero local state.
 
 ## What spec-driven development in Speqq means
 
@@ -20,7 +20,7 @@ For engineers, the payoff is zero local state and a live dashboard. There is no 
 npx skills add speqqai/spec-kit
 ```
 
-One command via [skills.sh](https://skills.sh) — the CLI detects the harnesses you have set up and installs all fourteen skills into the ones you confirm.
+One command via [skills.sh](https://skills.sh) — the CLI detects the harnesses you have set up and installs all fifteen skills into the ones you confirm.
 
 ### 2. Connect the Speqq MCP server
 
@@ -62,10 +62,11 @@ Ask your agent to spec a feature:
 
 | Skill | What it writes | When to use it |
 | --- | --- | --- |
+| `spec-setup` | The connection itself: the harness MCP registration, the `~/.speqq/credentials` skeleton (you paste the token in yourself — the agent never sees it), and the SessionStart hook entries | Connect Speqq for the first time; install or repair the session hooks |
 | `spec-init` | The spec shell, the matching queue item, the link between them, priority, and `in_progress` — one act, so none of it gets forgotten | Start something new and get it properly set up |
 | `spec-research` | Findings worth keeping, appended to the spec's memory as they are found | Get up to speed before specifying: what is true today, what is already decided, what is open |
 
-`spec-research` runs `spec-init` first when no spec exists — findings need a memory to land in.
+`spec-research` runs `spec-init` first when no spec exists — findings need a memory to land in. `spec-setup` also carries the session hooks: an optional SessionStart hook pack for Claude Code and Codex CLI that injects connection status and workspace orientation before you type anything — see [docs/hooks.md](docs/hooks.md).
 
 ## The four session skills
 
@@ -139,13 +140,14 @@ All four install with the same command. The MCP server is `https://speqq.com/mcp
 
 Planned, not yet shipped:
 
-- **Per-harness hook packs** — session context injection, enforced status sync, phase auto-commit, and a branch guard, wired into each harness's hook system.
+- **Deeper hook packs** — enforced status sync, phase auto-commit, and a branch guard. Session context injection already ships: `spec-setup` carries SessionStart hooks for Claude Code and Codex CLI — see [docs/hooks.md](docs/hooks.md).
 - **One-install plugins** for Claude Code and Codex that bundle the skills and the Speqq MCP connection in a single install.
 
 ## Documentation
 
 - [docs/installation.md](docs/installation.md) — installing, updating, and removing the skills, per harness
 - [docs/connect-speqq.md](docs/connect-speqq.md) — connecting the Speqq MCP server, per harness, with troubleshooting
+- [docs/hooks.md](docs/hooks.md) — the session hooks: what they inject, the invariants, the credentials bridge
 - [docs/workflow.md](docs/workflow.md) — the spec-driven workflow end to end
 
 ## License

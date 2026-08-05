@@ -89,6 +89,11 @@ main() {
     # Post-compaction only: instruct the AGENT to write a real summary to
     # spec memory — the one writer that can say what the work means.
     run_step spec-memory-summary.sh run_memory_summary
+    # Compaction emptied the window, so re-arm the pre-compaction nudge for
+    # the next climb (see spec-context-watch.sh).
+    if [ -n "${SPEQQ_HARNESS_SESSION_ID:-}" ]; then
+      rm -f "${TMPDIR:-/tmp}/speqq-context-nudge-$SPEQQ_HARNESS_SESSION_ID" 2>/dev/null || :
+    fi
   fi
   # A future step drops in here as one more run_step line.
 

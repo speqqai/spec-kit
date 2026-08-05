@@ -110,6 +110,26 @@ Success is silent — the line lands in the spec's MEMORY.md and nothing is
 printed. Anything skipped or broken is one stderr line naming the cause;
 stdout is empty either way.
 
+## spec-context-watch — the pre-compaction nudge
+
+The one thing a compaction hook can never do is put text in front of the
+model — so the pack gets ahead of compaction instead. `spec-context-watch.sh`
+runs on `PostToolUse` (every tool call), reads the session transcript's last
+assistant record for its `message.usage` token counts, and computes how full
+the context window is. Below the threshold (80% by default,
+`SPEQQ_CONTEXT_NUDGE_PCT` overrides) it exits silently in a few
+milliseconds. At the threshold it injects one instruction the model reads on
+its next request: save your working state to spec memory NOW, while the full
+context is still there — resolve the active spec from the branch, append 2-4
+sentences of real state, then continue.
+
+This is the pre-compaction summary done the only way the harness allows: the
+live agent, warned in time, writes it itself. The nudge fires ONCE per
+approach (a session-keyed flag file arms it); the post-compaction firing of
+the session-start dispatcher clears the flag, so the next climb re-arms it.
+No network, no credentials — the hook only measures and speaks; the agent
+does the saving with its own MCP tools.
+
 ## The four invariants
 
 Every path through both scripts holds four rules. They are what make a hook

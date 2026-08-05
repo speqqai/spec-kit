@@ -181,8 +181,12 @@ def field(name, pattern):
     return value if re.fullmatch(pattern, value) else ""
 
 
+transcript = payload.get("transcript_path", "")
+if not isinstance(transcript, str) or "\n" in transcript:
+    transcript = ""
 sys.stdout.write(field("session_id", r"[A-Za-z0-9._-]{1,128}") + "\n")
 sys.stdout.write(field("source", r"[a-z]{1,32}") + "\n")
+sys.stdout.write(transcript + "\n")
 '
 
 PYTHON_DEADLINE='
@@ -228,12 +232,14 @@ cleanup() {
 parse_hook_stdin() {
   SPEQQ_HARNESS_SESSION_ID=''
   SPEQQ_SESSION_SOURCE=''
+  SPEQQ_TRANSCRIPT_PATH=''
   if command -v python3 >/dev/null 2>&1; then
     stdin_fields=$(python3 -c "$PYTHON_STDIN" 2>/dev/null) || stdin_fields=''
     SPEQQ_HARNESS_SESSION_ID=$(printf '%s\n' "$stdin_fields" | sed -n '1p')
     SPEQQ_SESSION_SOURCE=$(printf '%s\n' "$stdin_fields" | sed -n '2p')
+    SPEQQ_TRANSCRIPT_PATH=$(printf '%s\n' "$stdin_fields" | sed -n '3p')
   fi
-  export SPEQQ_HARNESS_SESSION_ID SPEQQ_SESSION_SOURCE
+  export SPEQQ_HARNESS_SESSION_ID SPEQQ_SESSION_SOURCE SPEQQ_TRANSCRIPT_PATH
 }
 
 # ---------------------------------------------------------------------------

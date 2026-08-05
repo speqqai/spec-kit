@@ -25,6 +25,7 @@ run_memory_summary() {
   sms_branch=$(git branch --show-current 2>/dev/null) || sms_branch=''
   sms_agent=${SPEQQ_HOOK_AGENT:-claude-code}
   sms_session=${SPEQQ_HARNESS_SESSION_ID:-}
+  sms_transcript=${SPEQQ_TRANSCRIPT_PATH:-}
 
   cat <<INSTRUCTION
 
@@ -36,6 +37,9 @@ work stands so the next session (or another agent) can resume from it:
    and 2-4 sentences in your own words: what you were doing, the current
    state (what works, what is unfinished), and the immediate next step.
 3. Then continue the task you were on.
-If no queue item claims this branch, skip the append and continue.
+If no queue item claims this branch, skip the append and continue.${sms_transcript:+
+Compaction compressed your window, not the record: the complete pre-compaction
+conversation is preserved at $sms_transcript
+- Read its tail first if the compacted summary is missing details you need.}
 INSTRUCTION
 }

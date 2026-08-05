@@ -1,6 +1,6 @@
 # Installation
 
-Speqq Spec-Kit is a set of fourteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn your coding agent into a spec-driven planner whose specs live in Speqq instead of loose markdown files. One install covers every supported harness.
+Speqq Spec-Kit is a set of fifteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn your coding agent into a spec-driven planner whose specs live in Speqq instead of loose markdown files. One install covers every supported harness.
 
 ## Install
 
@@ -8,7 +8,7 @@ Speqq Spec-Kit is a set of fourteen [Agent Skills](https://agentskills.io) (`SKI
 npx skills add speqqai/spec-kit
 ```
 
-The `skills` CLI detects the coding agents you have set up, asks you to confirm which get the skills, and installs all fourteen into each one you confirm. Each skill is a folder containing a `SKILL.md`; the agent loads it when the task matches the skill's description or when you invoke it by name.
+The `skills` CLI detects the coding agents you have set up, asks you to confirm which get the skills, and installs all fifteen into each one you confirm. Each skill is a folder containing a `SKILL.md`; the agent loads it when the task matches the skill's description or when you invoke it by name.
 
 Installs are project-level by default. Useful flags:
 
@@ -33,6 +33,7 @@ Installs are project-level by default. Useful flags:
 | `spec-queue` | Files plan steps into the Speqq queue with dedup and priority |
 | `spec-init` | Creates the spec shell, queue item, link, priority and in-progress status |
 | `spec-research` | Reads what exists today and records the findings worth keeping |
+| `spec-setup` | Connects Speqq — walks you through the MCP token and server registration, creates the credentials skeleton, and wires up the session hooks |
 | `spec-start` | Opens a session on a spec and records what the run is going after |
 | `spec-pause` | Closes a session: where the work stands, and honest row statuses |
 | `spec-snippet` | Appends one line to a spec's memory, on demand |
@@ -59,7 +60,7 @@ If a harness does not appear in that output, check that harness's documentation 
 
 ## After installing: connect Speqq
 
-The skills store everything in a Speqq workspace over MCP — there is no `specs/` directory and no local state. Every skill runs a preflight and stops with connection instructions if the Speqq MCP server is not available. Set it up once: see [Connect Speqq](connect-speqq.md).
+The skills store everything in a Speqq workspace over MCP — there is no `specs/` directory and no local state. Every skill runs a preflight and stops with connection instructions if the Speqq MCP server is not available. Set it up once: ask the agent to **"set up Speqq"** and the `spec-setup` skill runs the walkthrough — and can wire up the session hooks in the same pass — or follow [Connect Speqq](connect-speqq.md) by hand.
 
 ## Updating
 
@@ -75,8 +76,14 @@ Refreshes installed skills to their latest published versions. It asks which sco
 npx skills remove
 ```
 
-Lists your installed skills and lets you pick the ones to remove — select the eight `spec-*` skills. Your specs are untouched — they live in Speqq, not on disk. If the command form differs in your CLI version, `npx skills --help` lists the current commands.
+Lists your installed skills and lets you pick the ones to remove — select the `spec-*` skills. Your specs are untouched — they live in Speqq, not on disk. If you had merged the session hooks, also delete their `SessionStart` entries from your harness config — see [Session hooks](hooks.md). If the command form differs in your CLI version, `npx skills --help` lists the current commands.
+
+## Session hooks
+
+The hook pack ships inside `spec-setup` — installing the skills puts the hook files on disk at `skills/spec-setup/hooks/`. Wired up, the hook injects two things at every session start, before you type anything: a connection-status line, and the workspace's PRODUCT.md — the product brief — so the agent starts already knowing what it is building.
+
+Wiring is one merge into your harness config. Ask the agent to **"set up Speqq"** and `spec-setup` merges the `SessionStart` entries, makes the script executable, and verifies it end to end — or do it by hand, per [Session hooks](hooks.md). The hooks run on Claude Code and Codex CLI (0.124.0+) today; Cursor and Gemini CLI session hooks cannot take plain-text stdout yet. Every skill works without the hooks — they make orientation automatic, not possible.
 
 ## Coming soon
 
-Two additions are on the roadmap: per-harness hook packs (session context injection, enforced status sync, phase auto-commit, branch guard) and one-install plugins for Claude Code and Codex that bundle the skills together with the Speqq MCP connection.
+Still on the roadmap: enforced status sync, phase auto-commit, and branch-guard hooks, plus one-install plugins for Claude Code and Codex that bundle the skills together with the Speqq MCP connection.

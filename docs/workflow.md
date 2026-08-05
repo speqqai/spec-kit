@@ -92,4 +92,4 @@ A walkthrough of one feature, "branch links" — connecting a table row to a Git
 
 ## Coming soon
 
-On the roadmap: per-harness hook packs (session context injection, enforced status sync, phase auto-commit, branch guard) and one-install plugins for Claude Code and Codex that bundle the skills with the Speqq MCP connection.
+Session context injection already ships: the `spec-setup` skill carries SessionStart hooks for Claude Code and Codex CLI that inject connection status and workspace orientation at session start — see [Session hooks](hooks.md). On the roadmap: enforced status sync, phase auto-commit, and branch-guard hooks, plus one-install plugins for Claude Code and Codex that bundle the skills with the Speqq MCP connection.

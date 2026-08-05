@@ -1,0 +1,29 @@
+{
+  "description": "Speqq session context at session start (Codex >= 0.124.0).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./.claude/skills/spec-setup/hooks/session-start.sh",
+            "statusMessage": "Connecting to Speqq",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./.claude/skills/spec-setup/hooks/session-start.sh",
+            "statusMessage": "Refreshing Speqq context",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

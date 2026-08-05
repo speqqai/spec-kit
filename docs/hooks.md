@@ -61,8 +61,14 @@ two moments its context is about to be lost:
 
 | Event | When it fires | The recorded line ends up saying |
 | --- | --- | --- |
-| `PreCompact` (`manual\|auto`) | right before the context window is compacted | `compacting on <branch> - dirty: <n> files (<up to 3 names>)` |
-| `SessionEnd` | when the session ends | `session ended on <branch> - dirty: <n> files` |
+| `PreCompact` (`manual\|auto`) | right before the context window is compacted | `compacting on <branch> - dirty: <n> files (<up to 3 names>) - working on: <what the session was doing>` |
+| `SessionEnd` | when the session ends | `session ended on <branch> - dirty: <n> files - last: <what the session was doing>` |
+
+The trailing fragment is the last thing the assistant said, read from the
+tail of the harness transcript and clipped to one readable line — so the log
+tells the story ("wiring the filter UI to the new endpoint"), not just the
+file count. No transcript, or nothing readable in it, and the line simply
+ends after the git facts.
 
 The hook appends that one line to the MEMORY.md of the **active spec** — the
 workspace queue item whose branch field exactly matches the current git

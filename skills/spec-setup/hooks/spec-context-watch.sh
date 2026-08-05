@@ -1,9 +1,11 @@
 #!/bin/sh
 #
-# spec-context-watch.sh — the pre-compaction nudge: when the context window
-# crosses a fill threshold, tell the LIVE agent to save its working state to
-# spec memory BEFORE auto-compaction fires. PostToolUse runs this after every
-# tool call; below the threshold it exits instantly and silently.
+# spec-context-watch.sh — the checkpoint ladder: as the context window fills,
+# tell the LIVE agent to record where the work stands — once near the start
+# of the window, once in the middle, and once right before auto-compaction
+# would fire. PostToolUse runs this after every tool call; between rungs it
+# exits instantly and silently. The memory log ends up reading as a
+# chronological story of the session, written by the agent itself.
 #
 # Why this exists: PreCompact hooks cannot put text in front of the model
 # (their output never reaches it), and model-in-the-loop compaction hooks
@@ -17,17 +19,18 @@
 # Discipline for a hook that fires constantly:
 #   - No network. No credentials. One python3 pass over the transcript TAIL.
 #   - Silent below threshold: stdout empty, stderr empty, exit 0.
-#   - Nudges ONCE per approach: a session-keyed flag file arms it, and the
-#     session-start dispatcher clears the flag on the post-compaction firing
-#     so the next climb re-arms it.
+#   - Each rung fires ONCE per window: a session-keyed flag file records the
+#     highest rung fired, and the session-start dispatcher clears it on the
+#     post-compaction firing so the next window climbs the ladder again.
 #   - Never blocks anything: every path exits 0.
 #
-# Env: SPEQQ_CONTEXT_NUDGE_PCT (default 80), SPEQQ_CONTEXT_WINDOW (default
-# 200000), SPEQQ_HOOK_AGENT (attribution name for the instruction).
+# Env: SPEQQ_CONTEXT_NUDGE_PCT (comma list of rungs, default "30,60,85"),
+# SPEQQ_CONTEXT_WINDOW (default 200000), SPEQQ_HOOK_AGENT (attribution name
+# for the instruction).
 
 set -u
 
-SM_NUDGE_PCT=${SPEQQ_CONTEXT_NUDGE_PCT:-80}
+SM_NUDGE_PCT=${SPEQQ_CONTEXT_NUDGE_PCT:-30,60,85}
 SM_WINDOW=${SPEQQ_CONTEXT_WINDOW:-200000}
 SM_AGENT=${SPEQQ_HOOK_AGENT:-claude-code}
 SM_BRANCH=$(git branch --show-current 2>/dev/null) || SM_BRANCH=''
@@ -42,8 +45,11 @@ import re
 import sys
 import tempfile
 
-THRESHOLD, WINDOW = float(sys.argv[1]), int(sys.argv[2])
+RUNGS = sorted(float(p) for p in sys.argv[1].split(",") if p.strip())
+WINDOW = int(sys.argv[2])
 AGENT, BRANCH = sys.argv[3], sys.argv[4]
+if not RUNGS:
+    raise SystemExit(0)
 
 raw = "" if sys.stdin.isatty() else sys.stdin.read()
 try:
@@ -60,11 +66,16 @@ if not isinstance(session, str) or not re.fullmatch(r"[A-Za-z0-9._-]{1,128}", se
 if not isinstance(transcript, str) or not os.path.isfile(transcript):
     raise SystemExit(0)
 
-# Once per approach: the flag arms after a nudge; session-start.sh removes it
-# on the post-compaction firing so the next climb nudges again.
+# Each rung fires once per window: the flag holds the highest rung fired;
+# session-start.sh removes the flag on the post-compaction firing so the next
+# window climbs the ladder again.
 flag = os.path.join(tempfile.gettempdir(), "speqq-context-nudge-" + session)
+fired = -1.0
 if os.path.exists(flag):
-    raise SystemExit(0)
+    try:
+        fired = float(open(flag).read().strip() or "-1")
+    except (OSError, ValueError):
+        fired = -1.0
 
 # The LAST assistant record carries the current window fill. Tail only: long
 # transcripts are huge and this runs after every tool call.
@@ -96,24 +107,37 @@ for line in reversed(lines):
 if used is None:
     raise SystemExit(0)
 pct = used * 100.0 / WINDOW
-if pct < THRESHOLD:
+# The highest unfired rung at or below the current fill. A jump past two
+# rungs nudges once, for the highest.
+due = [r for r in RUNGS if r > fired and pct >= r]
+if not due:
     raise SystemExit(0)
+rung = max(due)
+final = rung == max(RUNGS)
 
-# Arm the flag BEFORE emitting, so a crash after this line costs one nudge,
-# never a nudge storm.
+# Record the rung BEFORE emitting, so a crash after this line costs one
+# nudge, never a nudge storm.
 with open(flag, "w") as handle:
-    handle.write("%.1f" % pct)
+    handle.write("%.1f" % rung)
 
 where = BRANCH if BRANCH else "the current branch"
-instruction = (
-    "Your context window is %.0f%% full and will be auto-compacted soon. "
-    "Before continuing, save your working state while you still have full context: "
+if final:
+    opening = (
+        "Your context window is %.0f%% full and will be auto-compacted soon. "
+        "Save your working state now, while you still have full context: " % pct
+    )
+else:
+    opening = (
+        "Checkpoint: your context window is %.0f%% full. Record a progress "
+        "update so the memory log tells the story of this session: " % pct
+    )
+instruction = opening + (
     "resolve the active spec (the queue item whose branch is %s - queue_read shows "
     "each item, its branch, and its linked spec) and call spec_memory_append on it "
     "with agent \"%s\", session_id \"%s\", and 2-4 sentences in your own words: what "
     "you are doing, the current state (what works, what is unfinished), and the "
     "immediate next step. Then continue the task. If no queue item claims this "
-    "branch, skip the append and continue." % (pct, where, AGENT, session)
+    "branch, skip the append and continue." % (where, AGENT, session)
 )
 print(
     json.dumps(

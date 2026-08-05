@@ -110,25 +110,30 @@ Success is silent — the line lands in the spec's MEMORY.md and nothing is
 printed. Anything skipped or broken is one stderr line naming the cause;
 stdout is empty either way.
 
-## spec-context-watch — the pre-compaction nudge
+## spec-context-watch — the checkpoint ladder
 
 The one thing a compaction hook can never do is put text in front of the
 model — so the pack gets ahead of compaction instead. `spec-context-watch.sh`
 runs on `PostToolUse` (every tool call), reads the session transcript's last
 assistant record for its `message.usage` token counts, and computes how full
-the context window is. Below the threshold (80% by default,
-`SPEQQ_CONTEXT_NUDGE_PCT` overrides) it exits silently in a few
-milliseconds. At the threshold it injects one instruction the model reads on
-its next request: save your working state to spec memory NOW, while the full
-context is still there — resolve the active spec from the branch, append 2-4
-sentences of real state, then continue.
+the context window is. As the window fills it nudges the live agent at three
+rungs — 30%, 60%, and 85% by default (`SPEQQ_CONTEXT_NUDGE_PCT` takes a
+comma list) — each time injecting one instruction the model reads on its
+next request: record where the work stands in spec memory — resolve the
+active spec from the branch, append 2-4 sentences of real state, then
+continue. The early rungs say "checkpoint"; the final rung, sitting under
+the auto-compaction threshold, says "save now, while you still have full
+context."
 
-This is the pre-compaction summary done the only way the harness allows: the
-live agent, warned in time, writes it itself. The nudge fires ONCE per
-approach (a session-keyed flag file arms it); the post-compaction firing of
-the session-start dispatcher clears the flag, so the next climb re-arms it.
-No network, no credentials — the hook only measures and speaks; the agent
-does the saving with its own MCP tools.
+The memory log ends up reading as a chronological story of the session,
+written by the agent itself — and the pre-compaction summary happens the
+only way the harness allows: the live agent, warned in time, writes it.
+Each rung fires once per window (a session-keyed flag records the highest
+rung fired); the post-compaction firing of the session-start dispatcher
+clears the flag, so the next window climbs the ladder again. Between rungs
+the hook is silent and costs a few milliseconds; no network, no
+credentials — it only measures and speaks, and the agent does the saving
+with its own MCP tools.
 
 ## The four invariants
 

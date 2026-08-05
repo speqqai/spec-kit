@@ -66,12 +66,11 @@ def fail(message):
 
 
 if MODE == "hook-stdin":
-    # The harness hook payload. Four lines out: session_id, the event
-    # (precompact / sessionend / empty when neither can be told), the
+    # The harness hook payload. Three lines out: session_id, the event
+    # (precompact / sessionend / empty when neither can be told), and the
     # detail — PreCompact carries `trigger`, SessionEnd carries `reason`,
-    # whichever is present lands in the one detail slot — and the transcript
-    # path. Never fatal: a TTY stdin (a human running the script by hand)
-    # reads as no payload.
+    # whichever is present lands in the one detail slot. Never fatal: a TTY
+    # stdin (a human running the script by hand) reads as no payload.
     raw = "" if sys.stdin.isatty() else sys.stdin.read()
     try:
         payload = json.loads(raw)
@@ -95,50 +94,9 @@ if MODE == "hook-stdin":
         event = "sessionend"
     else:
         event = ""
-    transcript = payload.get("transcript_path", "")
-    if not isinstance(transcript, str) or "\n" in transcript:
-        transcript = ""
     sys.stdout.write(field("session_id", r"[A-Za-z0-9._-]{1,128}") + "\n")
     sys.stdout.write(event + "\n")
     sys.stdout.write((trigger or reason) + "\n")
-    sys.stdout.write(transcript + "\n")
-elif MODE == "transcript-tail":
-    # The last thing the assistant said, clipped to one readable fragment —
-    # what the session was WORKING ON when the snapshot fired. Read from the
-    # harness transcript (JSONL, newest last); any shape surprise or missing
-    # file is an empty answer, never an error. Only the tail of the file is
-    # read: long-session transcripts can be huge, and this runs on the
-    # compaction path.
-    TAIL_BYTES = 262144
-    CLIP = 180
-    try:
-        with open(sys.argv[2], "rb") as handle:
-            handle.seek(0, 2)
-            handle.seek(max(0, handle.tell() - TAIL_BYTES))
-            lines = handle.read().decode("utf-8", "replace").splitlines()
-    except OSError:
-        raise SystemExit(0)
-    fragment = ""
-    for line in reversed(lines):
-        try:
-            entry = json.loads(line)
-        except ValueError:
-            continue
-        if not isinstance(entry, dict) or entry.get("type") != "assistant":
-            continue
-        message = entry.get("message")
-        content = message.get("content") if isinstance(message, dict) else None
-        if not isinstance(content, list):
-            continue
-        text = " ".join(
-            p.get("text", "") for p in content if isinstance(p, dict) and p.get("type") == "text"
-        ).strip()
-        if text:
-            fragment = " ".join(text.split())
-            break
-    if len(fragment) > CLIP:
-        fragment = fragment[:CLIP].rsplit(" ", 1)[0] + "..."
-    sys.stdout.write(fragment + "\n")
 elif MODE == "queue-args":
     sys.stdout.write(json.dumps({"workspace_id": sys.argv[2]}))
 elif MODE == "append-args":
@@ -190,24 +148,11 @@ sm_parse_hook_stdin() {
   SM_EVENT=''
   # shellcheck disable=SC2034 # captured with the event per the hook contract
   SM_EVENT_DETAIL=''
-  SM_TRANSCRIPT_PATH=''
   if command -v python3 >/dev/null 2>&1; then
     sm_stdin_fields=$(python3 -c "$SM_PYTHON" hook-stdin 2>/dev/null) || sm_stdin_fields=''
     SM_SESSION_ID=$(printf '%s\n' "$sm_stdin_fields" | sed -n '1p')
     SM_EVENT=$(printf '%s\n' "$sm_stdin_fields" | sed -n '2p')
     SM_EVENT_DETAIL=$(printf '%s\n' "$sm_stdin_fields" | sed -n '3p')
-    SM_TRANSCRIPT_PATH=$(printf '%s\n' "$sm_stdin_fields" | sed -n '4p')
-  fi
-}
-
-# What the session was working on, read from the tail of the harness
-# transcript. Empty when there is no transcript, no readable assistant text,
-# or any surprise at all — the snapshot is still worth writing without it.
-sm_read_last_activity() {
-  SM_LAST_ACTIVITY=''
-  if [ -n "$SM_TRANSCRIPT_PATH" ] && [ -f "$SM_TRANSCRIPT_PATH" ]; then
-    SM_LAST_ACTIVITY=$(python3 -c "$SM_PYTHON" transcript-tail "$SM_TRANSCRIPT_PATH" 2>/dev/null | sed -n '1p') ||
-      SM_LAST_ACTIVITY=''
   fi
 }
 
@@ -281,11 +226,7 @@ main() {
   sm_read_git_state
   [ -n "$SM_BRANCH" ] || give_up 'no current git branch - cannot resolve the active spec'
 
-  sm_read_last_activity
-
   # One line, no timestamp: the server stamps the time and composes the line.
-  # The transcript fragment is the part a reader actually wants — what the
-  # session was doing — so it leads; the git facts follow as evidence.
   case $SM_EVENT in
   precompact)
     if [ "$SM_DIRTY_COUNT" -gt 0 ]; then
@@ -293,11 +234,9 @@ main() {
     else
       SM_SNIPPET="compacting on $SM_BRANCH - dirty: 0 files"
     fi
-    [ -z "$SM_LAST_ACTIVITY" ] || SM_SNIPPET="$SM_SNIPPET - working on: $SM_LAST_ACTIVITY"
     ;;
   sessionend)
     SM_SNIPPET="session ended on $SM_BRANCH - dirty: $SM_DIRTY_COUNT files"
-    [ -z "$SM_LAST_ACTIVITY" ] || SM_SNIPPET="$SM_SNIPPET - last: $SM_LAST_ACTIVITY"
     ;;
   esac
 

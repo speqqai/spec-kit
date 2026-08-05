@@ -35,6 +35,33 @@ Once the plan exists, the loop is **queue → implement → converge**, repeated
 
 **`spec-converge`** reconciles reality against intent. It reads the Requirements and Implementation plan, inspects the present working tree (not git history), and gives every requirement, criterion, and step an evidence-backed verdict: done, partially met, or unmet. Genuinely-done rows flip to `done`; the remaining gap is appended as new concrete plan steps — deduped against existing steps, never rewriting, renumbering, or deleting anything. If the code already satisfies everything, it writes nothing and reports **converged**. Otherwise, `spec-implement` picks up the appended steps and the loop continues.
 
+## Setting work up, and getting up to speed
+
+**`spec-init`** stands up a new piece of work in one act: the spec shell, the matching queue item, the link between them, the priority, and the flip to `in_progress`. It is one skill rather than four steps because doing them separately is how one gets forgotten — a spec with no queue item is invisible to whoever picks work up next, and a queue item with no spec is a title with nowhere to write. It creates scaffolding only; the content is written by the discipline skills. (Assignment is the one thing it cannot do: no MCP tool sets an assignee today, so it says so rather than claiming otherwise.)
+
+**`spec-research`** answers the question every spec starts with: what is true today, and what has already been decided? It reads PRODUCT.md, the specs already in the workspace, the queue, the actual working tree, and the repo's own rules — then reports how things work today with file paths, what is already decided, what already exists of the request, and what is genuinely open. Written without this, a spec re-litigates settled decisions and invents constraints the codebase does not have.
+
+If no spec exists yet, it runs `spec-init` first rather than researching into thin air — findings need a memory to land in, and research done before the spec exists is research that has to be redone.
+
+It also records as it goes. When research turns up something that changes what someone would build — the code not doing what its name claims, a constraint nobody wrote down, a part of the request that already ships — it appends that to the spec's memory at the moment it finds it. Findings are the cheapest thing to lose and the most expensive to repeat, and a batch written at the end is the batch that never gets written when a session stops early.
+
+## What the agent carries between sessions
+
+A spec keeps a **MEMORY.md**: an append-only log of what happened while it was built. One line per entry, timestamp first, oldest at the top — no categories and no schema, just the agent's own sentence about what just happened. It exists because a context window ends, sometimes deliberately and sometimes not, and anything not recorded is lost with it.
+
+Four skills work the session around it:
+
+- **`spec-start`** opens work on a spec that has not been worked yet, recording what the run is going after. It refuses a spec that already has snippets and points at `spec-resume` — a beginning written into the middle of a log misleads every later reader.
+- **`spec-pause`** closes a session: one line covering what landed, what did not and why, and what is next, plus honest row statuses. Write it even when the session achieved nothing — *"spent the session trying X; it does not work because Y"* is a full session's value preserved.
+- **`spec-snippet`** appends one line on demand, whenever there is something worth keeping.
+- **`spec-resume`** reads the memory *before* the plan and reports where the work stopped and what was already abandoned. Not repeating a dead end is most of its value.
+
+The rule underneath all four: **when an agent learns something the next one would want to know, it appends a line.** An approach tried and dropped, a decision between options, a surprise in the code, a gate that failed for a reason worth remembering. Not every step — a step that went exactly as planned is already recorded by the plan and the commit.
+
+The log is append-only in the strict sense. `spec_memory_append` is the only way in, it stamps the time itself, existing lines are never edited, and the generic markdown write tools refuse a memory outright. That is what makes it trustworthy under interruption.
+
+**PRODUCT.md** is the other file, one per workspace: what the product is, who it is for, what it is going after, and what must never break. It is the answer to *what is this product* that reading the code cannot produce. `spec_orient` returns its id; `spec_read` fetches it. Anyone with workspace access can edit it, and so can an agent — edits apply as patches, so an agent writes around a person's words rather than over them.
+
 ## Resolving the active spec with zero local state
 
 There is no state file telling the agent what it's working on. `spec-implement`, `spec-converge`, and `spec-queue` all resolve the active spec from Speqq-side data plus the checkout itself, in a fixed order, stopping at the first rung that answers:

@@ -2,7 +2,7 @@
 
 **Spec-driven development for coding agents — with every spec living in Speqq, not in loose markdown files.**
 
-Speqq Spec-Kit is a set of eight [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn Claude Code, Codex CLI, Cursor, or Gemini CLI into a spec-driven planner. It follows the lineage of GitHub's spec-kit with one fundamental difference: every artifact lands in a Speqq workspace over MCP — live collaboration, a real work queue, row-level execution status. No `specs/` directory. No state files. Zero local state.
+Speqq Spec-Kit is a set of fourteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn Claude Code, Codex CLI, Cursor, or Gemini CLI into a spec-driven planner. It follows the lineage of GitHub's spec-kit with one fundamental difference: every artifact lands in a Speqq workspace over MCP — live collaboration, a real work queue, row-level execution status. No `specs/` directory. No state files. Zero local state.
 
 ## What spec-driven development in Speqq means
 
@@ -20,7 +20,7 @@ For engineers, the payoff is zero local state and a live dashboard. There is no 
 npx skills add speqqai/spec-kit
 ```
 
-One command via [skills.sh](https://skills.sh) — the CLI detects the harnesses you have set up and installs all eight skills into the ones you confirm.
+One command via [skills.sh](https://skills.sh) — the CLI detects the harnesses you have set up and installs all fourteen skills into the ones you confirm.
 
 ### 2. Connect the Speqq MCP server
 
@@ -45,7 +45,7 @@ Ask your agent to spec a feature:
 
 `spec-product` picks it up: it grounds in your repo, asks a few targeted questions (one at a time, five max), checkpoints each section with you, then creates the spec in your Speqq workspace — Overview plus Requirements with acceptance criteria. From there the other skills add their tabs to the same spec: "design this feature" (spec-ux), "write the system design" (spec-eng), "write the test plan" (spec-qa) — then "queue the work" and "implement the spec."
 
-## The eight skills
+## The eight authoring and execution skills
 
 | Skill | What it writes | When to use it |
 | --- | --- | --- |
@@ -57,6 +57,28 @@ Ask your agent to spec a feature:
 | `spec-implement` | Code on a feature branch — plus live row status flips in the spec as each step lands, so the spec is the progress dashboard | Execute a spec's Implementation plan, or resume one |
 | `spec-converge` | Status flips for genuinely-done rows and appended plan steps covering the remaining gap — append-only, never rewriting finished prose | Check drift: reconcile what the code does against what the spec says |
 | `spec-queue` | Deduplicated queue items — one per plan step, priority-labeled, traceable back to the spec | File a plan's work into the Speqq workspace queue |
+
+## Setup and grounding
+
+| Skill | What it writes | When to use it |
+| --- | --- | --- |
+| `spec-init` | The spec shell, the matching queue item, the link between them, priority, and `in_progress` — one act, so none of it gets forgotten | Start something new and get it properly set up |
+| `spec-research` | Findings worth keeping, appended to the spec's memory as they are found | Get up to speed before specifying: what is true today, what is already decided, what is open |
+
+`spec-research` runs `spec-init` first when no spec exists — findings need a memory to land in.
+
+## The four session skills
+
+A spec keeps a **MEMORY.md**: an append-only log of what happened while it was built, one line per entry, written by agents as work happens. It exists because a context window ends — sometimes deliberately, sometimes not — and anything not recorded is lost with it. These four are how a session opens, closes, and picks back up.
+
+| Skill | What it writes | When to use it |
+| --- | --- | --- |
+| `spec-start` | The first line in a spec's memory, naming what this run is going after; marks the queue item in progress | Begin work on a spec that has not been worked yet |
+| `spec-pause` | One line describing where the work stands — what landed, what did not and why, what is next — plus honest row statuses | Stop for now, so the next session starts from a record instead of from commits |
+| `spec-snippet` | One line, on demand, in your own words | Record something as you go: a decision, a dead end, a surprise |
+| `spec-resume` | Nothing — it is read-only | Come back to a spec: where it stopped, what was already tried, what is next |
+
+The log is append-only in the strict sense: `spec_memory_append` is the only way in, it stamps the time itself, existing lines are never edited, and the generic markdown write tools refuse a memory outright. That is what makes it trustworthy under interruption.
 
 ## The workflow
 

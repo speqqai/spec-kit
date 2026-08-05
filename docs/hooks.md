@@ -2,7 +2,7 @@
 
 Spec-Kit ships an optional hook pack inside the `spec-setup` skill. When a
 coding session starts, the harness runs one script that opens a single
-connection to the Speqq MCP server and injects two things as session context —
+connection to the Speqq MCP server and injects three things as session context —
 before you type anything:
 
 1. **Connection status** — one line confirming the session is wired up:
@@ -22,6 +22,12 @@ before you type anything:
    workspace that has not written one gets a single line naming the gap, so
    the agent can offer to create it.
 
+3. **Active work** — the recall half of the memory system (see
+   [spec-active-work](#spec-active-work--the-recall-step) below): the open
+   queue items, the active spec resolved from the current git branch, the tail
+   of that spec's MEMORY.md verbatim, and an identity coda naming which
+   session THIS is.
+
 The hooks are optional. Every `spec-*` skill makes the same calls itself when
 asked; the hooks make orientation automatic, which matters most in the sessions
 where nobody thinks to ask for it.
@@ -31,12 +37,12 @@ where nobody thinks to ask for it.
 Both harnesses fire the same script on session start; the script reads the
 hook's stdin JSON (`session_id`, `source`) to tell the cases apart.
 
-| Session event | Connection status | Workspace context | Summary instruction |
-| --- | --- | --- | --- |
-| New session (`startup`) | printed | printed | — |
-| Resumed session (`resume`) | printed | printed | — |
-| Cleared session (`clear`) | printed | printed | — |
-| After compaction (`compact`) | skipped | printed | printed |
+| Session event | Connection status | Workspace context | Active work | Summary instruction |
+| --- | --- | --- | --- | --- |
+| New session (`startup`) | printed | printed | printed | — |
+| Resumed session (`resume`) | printed | printed | printed | — |
+| Cleared session (`clear`) | printed | printed | printed | — |
+| After compaction (`compact`) | skipped | printed | printed | printed |
 
 The compact row is deliberate: a compaction squeezes the context window
 mid-session, so the orientation is re-injected — but the connection does not
@@ -109,6 +115,44 @@ printf '{"session_id":"install-check","hook_event_name":"SessionEnd","reason":"o
 Success is silent — the line lands in the spec's MEMORY.md and nothing is
 printed. Anything skipped or broken is one stderr line naming the cause;
 stdout is empty either way.
+
+## spec-active-work — the recall step
+
+Writing memory is only half a memory system; `spec-active-work.sh` is the
+half that reads it back. It runs as a session-start step on **every** source
+— `startup`, `resume`, `clear`, and `compact` — right after the workspace
+context, and injects three things:
+
+1. **Open work** — up to 8 queue items that are in progress or todo
+   (in-progress first), each as `title [status] - branch` when a branch is
+   linked. An empty queue is one honest line, and past 8 the note names
+   `queue_read` as the call that lists the rest.
+
+2. **The active spec's memory tail** — the queue item whose branch field
+   exactly matches the current git branch names the active spec through its
+   linked document; `spec_memory_read` returns the last 12 MEMORY.md
+   snippets and the step prints them verbatim, newest last. This is the
+   direct payoff of every line `spec-memory.sh` and the checkpoint ladder
+   wrote: the next session opens already knowing what happened. No current
+   branch, no queue item claiming it, no linked spec — one honest line
+   naming which, and the open-work listing still prints.
+
+3. **The identity coda** — whenever a session id is known:
+
+   ```
+   You are session a1b2c3d4 (claude-code). Memory lines carry the session that wrote them - lines from other sessions are earlier work; read them as a handoff, not your own memory.
+   ```
+
+   Memory lines are attributed (`agent · session8 ·`), so without this line
+   an agent has no way to tell its own earlier snippets from another
+   session's. With it, the log reads correctly as a handoff.
+
+The step holds the same invariants as its siblings, plus one of its own:
+each section is buffered and printed whole or not at all, so a failure
+mid-run (say `spec_memory_read` timing out) keeps every section already
+printed, adds one stderr line naming the cause, and never blocks the
+session. Its calls ride the same open MCP connection and the same shared
+deadline as every other step.
 
 ## spec-context-watch — the checkpoint ladder
 
@@ -193,6 +237,7 @@ Everything lives in the skill's own directory,
 | `lib.sh` | Shared plumbing: credentials resolution, deadline, transport — sourced, never executed |
 | `speqq-setup.sh` | The connection-status step |
 | `spec-workspace-context.sh` | The workspace-context step |
+| `spec-active-work.sh` | The recall step — open work, the active spec's memory tail, and the session identity coda |
 | `spec-memory.sh` | The write hook — records one memory line at `PreCompact` and `SessionEnd` |
 | `claude-code.settings.json` | The `SessionStart`, `PreCompact`, and `SessionEnd` entries to merge into `.claude/settings.json` |
 | `codex.hooks.json` | The same shape for `~/.codex/hooks.json` |

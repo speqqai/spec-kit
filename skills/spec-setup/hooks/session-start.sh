@@ -11,12 +11,12 @@
 #
 #   speqq-setup.sh           run_speqq_setup        (skipped when source=compact)
 #   spec-workspace-context.sh run_workspace_context (always)
+#   spec-active-work.sh      run_active_work        (always)
 #
 # Each step is a sibling file defining one run_* function; adding a future
-# step (say spec-active-work.sh defining run_active_work) is ONE more
-# run_step line in main(). A missing step file is skipped with a single
-# stderr line — steps ship independently and the dispatcher hard-depends on
-# none of them.
+# step is ONE more run_step line in main(). A missing step file is skipped
+# with a single stderr line — steps ship independently and the dispatcher
+# hard-depends on none of them.
 #
 # The invariants (never block, never silent, never leak the token, one
 # deadline, stdout is sacred) are documented and enforced in lib.sh.
@@ -85,6 +85,7 @@ main() {
     run_step speqq-setup.sh run_speqq_setup
   fi
   run_step spec-workspace-context.sh run_workspace_context
+  run_step spec-active-work.sh run_active_work
   if [ "${SPEQQ_SESSION_SOURCE:-}" = 'compact' ]; then
     # Post-compaction only: instruct the AGENT to write a real summary to
     # spec memory — the one writer that can say what the work means.

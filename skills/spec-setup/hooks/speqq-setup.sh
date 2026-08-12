@@ -20,15 +20,39 @@ speqq-setup.sh)
   ;;
 esac
 
+# The harness-specific connect instruction: the ONE line of this block that
+# differs per agent. SPEQQ_HOOK_AGENT is set in each wiring's command string,
+# so the block a user sees always matches the harness that fired it; an unset
+# or unknown value falls through to the Claude Code form, the pack's oldest.
+print_speqq_connect_instruction() {
+  case ${SPEQQ_HOOK_AGENT:-claude-code} in
+  codex)
+    cat <<'CODEX'
+2. The user adds the Speqq MCP server to Codex, pasting their own values
+   into ~/.codex/config.toml themselves:
+   [mcp_servers.speqq]
+   url = "<speqq-mcp-url>"
+   bearer_token_env_var = "SPEQQ_MCP_TOKEN"
+   and exports SPEQQ_MCP_TOKEN=<token> in their shell profile.
+CODEX
+    ;;
+  *)
+    cat <<'CLAUDE'
+2. The user adds the Speqq MCP server to their agent, pasting their own URL
+   and token into the command themselves. For Claude Code:
+   claude mcp add --transport http speqq <speqq-mcp-url> --header "Authorization: Bearer <token>"
+CLAUDE
+    ;;
+  esac
+}
+
 print_speqq_setup_guidance() {
   cat <<GUIDANCE
 Speqq is not connected for this repository.
 Agent: offer to walk the user through connecting Speqq. Every step below is
 the USER's own action - never ask for, collect, read, or echo the token.
 1. The user creates a token in Speqq under Settings -> MCP Tokens.
-2. The user adds the Speqq MCP server to their agent, pasting their own URL
-   and token into the command themselves. For Claude Code:
-   claude mcp add --transport http speqq <speqq-mcp-url> --header "Authorization: Bearer <token>"
+$(print_speqq_connect_instruction)
 3. So session hooks can authenticate too, the user creates
    ${SPEQQ_CREDENTIALS_PATH:-$HOME/.speqq/credentials} with mode 600
    (chmod 600) and pastes these three lines with their own values:

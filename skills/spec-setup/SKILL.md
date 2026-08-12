@@ -102,7 +102,10 @@ one merge, one chmod, and one verification.
    (matchers `startup|resume|clear` and `compact`) into the project's
    `.claude/settings.json` — into an existing `hooks.SessionStart` array if one
    exists, creating the file and keys if not. Never replace hooks that are
-   already there. For Codex CLI (0.124.0 or newer), merge `hooks/codex.hooks.json`
+   already there. For Codex CLI, merge `hooks/codex.hooks.json`
+   (SessionStart needs Codex 0.114.0+, its compact source 0.133.0+, PreCompact
+   and the PostToolUse ladder 0.129.0+, SessionEnd 0.145.0+ — name what an
+   older build loses rather than refusing outright),
    into `~/.codex/hooks.json` the same way; Codex trust-gates new hooks, so tell
    the user to run `/hooks` there and trust the entry.
 

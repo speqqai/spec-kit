@@ -32,7 +32,21 @@ Add `--scope user` to register it for every project instead of just the current 
 
 ### Codex CLI
 
-Add the Speqq server to Codex's configuration file (`config.toml` in your Codex home directory) as an MCP server entry with the URL and bearer token. See the Codex CLI MCP documentation for the exact entry format.
+Add the Speqq server to `~/.codex/config.toml` (or a trusted project's `.codex/config.toml`):
+
+```toml
+[mcp_servers.speqq]
+url = "https://speqq.com/mcp"
+bearer_token_env_var = "SPEQQ_MCP_TOKEN"
+```
+
+Then export the token in your shell profile — Codex reads it from the environment at startup:
+
+```bash
+export SPEQQ_MCP_TOKEN="<your-token>"
+```
+
+Codex does not accept a literal bearer-token key in `config.toml`; the `bearer_token_env_var` indirection is the supported form, and it keeps the token out of the config file. This is the same value the session hooks read from the credentials file, living in its second home. Streamable HTTP servers need Codex CLI 0.44.0 or newer. Confirm with `codex mcp list`, then start a new session and check the Speqq tools load.
 
 ### Cursor
 

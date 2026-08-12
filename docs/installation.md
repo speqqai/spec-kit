@@ -82,7 +82,7 @@ Lists your installed skills and lets you pick the ones to remove — select the 
 
 The hook pack ships inside `spec-setup` — installing the skills puts the hook files on disk at `skills/spec-setup/hooks/`. Wired up, the hook injects two things at every session start, before you type anything: a connection-status line, and the workspace's PRODUCT.md — the product brief — so the agent starts already knowing what it is building.
 
-Wiring is one merge into your harness config. Ask the agent to **"set up Speqq"** and `spec-setup` merges the `SessionStart` entries, makes the script executable, and verifies it end to end — or do it by hand, per [Session hooks](hooks.md). The hooks run on Claude Code and Codex CLI (0.124.0+) today; Cursor and Gemini CLI session hooks cannot take plain-text stdout yet. Every skill works without the hooks — they make orientation automatic, not possible.
+Wiring is one merge into your harness config. Ask the agent to **"set up Speqq"** and `spec-setup` merges the `SessionStart` entries, makes the script executable, and verifies it end to end — or do it by hand, per [Session hooks](hooks.md). The hooks run on Claude Code and Codex CLI today (skills need Codex 0.94.0+, session-start hooks 0.114.0+, the full hook pack 0.145.0+); Cursor and Gemini CLI session hooks cannot take plain-text stdout yet. Every skill works without the hooks — they make orientation automatic, not possible.
 
 ## Coming soon
 

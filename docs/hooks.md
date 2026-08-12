@@ -57,8 +57,10 @@ that makes the second one happen without anyone asking.
 **Claude Code** wires this as two `hooks.SessionStart` entries (matchers
 `startup|resume|clear` and `compact`) running
 `$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/session-start.sh` with a
-15-second harness timeout. **Codex CLI** (0.124.0 or newer — earlier builds
-have no hooks engine) takes the same shape in `~/.codex/hooks.json`; Codex
+15-second harness timeout. **Codex CLI** takes the same shape in
+`~/.codex/hooks.json`. Codex floors differ per event: SessionStart needs
+0.114.0 (its `compact` source 0.133.0), PreCompact and the PostToolUse
+ladder 0.129.0, SessionEnd 0.145.0 — the full pack wants 0.145.0 or newer; Codex
 trust-gates newly added hooks, so review and enable the entry with `/hooks` in
 the TUI. On some Codex builds a bare `codex` that silently restores the
 previous thread skips `SessionStart` entirely
@@ -275,7 +277,8 @@ removed on exit. The skills keep working without them.
 
 ## Harness support, honestly
 
-The hooks run on **Claude Code** and **Codex CLI (0.124.0+)** today. Cursor
+The hooks run on **Claude Code** and **Codex CLI** (SessionStart from
+0.114.0; the full pack from 0.145.0) today. Cursor
 and Gemini CLI both have session-start hook systems, but each requires a
 single JSON object on stdout — Gemini treats plain text as a parse failure —
 and these hooks write plain text. Until that is wired, the hooks are not

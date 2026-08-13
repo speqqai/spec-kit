@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "speqq",
+  "description": "Speqq's plugin marketplace.",
+  "owner": {
+    "name": "Speqq",
+    "url": "https://speqq.com"
+  },
+  "plugins": [
+    {
+      "name": "spec-kit",
+      "description": "Spec-driven development with Speqq: fifteen skills, session hooks that orient every session in your workspace, and the Speqq MCP connection - one install.",
+      "author": {
+        "name": "Speqq"
+      },
+      "homepage": "https://speqq.com",
+      "source": "./"
+    }
+  ]
+}

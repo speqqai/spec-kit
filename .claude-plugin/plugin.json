@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "spec-kit",
+  "version": "0.2.0",
+  "description": "Spec-driven development with Speqq: fifteen skills, session hooks that orient every session in your workspace, and the Speqq MCP connection - one install.",
+  "author": {
+    "name": "Speqq",
+    "url": "https://speqq.com"
+  },
+  "hooks": "./skills/spec-setup/hooks/claude.plugin.hooks.json",
+  "mcpServers": {
+    "speqq": {
+      "type": "http",
+      "url": "https://speqq.com/mcp"
+    }
+  }
+}

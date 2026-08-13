@@ -59,7 +59,9 @@ that makes the second one happen without anyone asking.
 `$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/session-start.sh` with a
 15-second harness timeout. **Codex CLI** takes the same shape in
 `~/.codex/hooks.json` (a trusted project can carry `.codex/hooks.json`
-instead). The pack is tested on Codex 0.147.0; the approximate floors per
+instead — an untrusted project loads no project-scope hooks at all, so the
+global file is the dependable default). The pack is tested on Codex 0.147.0;
+the approximate floors per
 event: SessionStart 0.114.0 (its `compact` source 0.133.0), PreCompact and
 the PostToolUse ladder 0.129.0, SessionEnd 0.145.0 — name what an older build
 loses rather than refusing it. The Codex fragment already fits two Codex
@@ -68,11 +70,12 @@ shared deadline to two), and the SessionStart entries lift the default
 2,500-character cap that would truncate the injected context. Codex
 trust-gates hooks: review and enable each entry with `/hooks` in the TUI —
 and expect the same review again after any change to an entry, because trust
-is keyed to the entry's content. On some Codex builds a bare `codex` that
-silently restores the
-previous thread skips `SessionStart` entirely
-([openai/codex#24228](https://github.com/openai/codex/issues/24228)); starting
-a genuinely new session is the workaround.
+is keyed to the entry's content. Resumed Codex sessions run without the
+hooks: a bare `codex` that silently restores the previous thread skips
+`SessionStart` ([openai/codex#24228](https://github.com/openai/codex/issues/24228)),
+and `codex exec resume` was observed on 0.147.0 to fire no hooks at all —
+not even the PostToolUse ladder. Starting a genuinely new session restores
+them.
 
 ## spec-memory
 
@@ -172,7 +175,9 @@ usage-bearing record — Claude Code's assistant records carry `message.usage`;
 Codex rollouts carry `token_count` records that also name the model's own
 window — and computes how full the context window is. The denominator is
 `SPEQQ_CONTEXT_WINDOW` when set, else the window the transcript names (Codex
-does), else 200000. As the window fills it nudges the live agent at three
+does), else 200000. One Codex nuance: usage records land at each turn's end,
+so the ladder reads from the second turn of a window on — the first turn has
+nothing to measure yet. As the window fills it nudges the live agent at three
 rungs — 30%, 60%, and 85% by default (`SPEQQ_CONTEXT_NUDGE_PCT` takes a
 comma list) — each time injecting one instruction the model reads on its
 next request: record where the work stands in spec memory — resolve the

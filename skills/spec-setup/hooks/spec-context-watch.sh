@@ -39,7 +39,9 @@
 # Env: SPEQQ_CONTEXT_NUDGE_PCT (comma list of rungs, default "30,60,85"),
 # SPEQQ_CONTEXT_WINDOW (overrides everything; default is the transcript's
 # own window when it names one, else 200000), SPEQQ_HOOK_AGENT (attribution
-# name for the instruction).
+# name for the instruction). A fill that overshoots the assumed default
+# proves the default wrong for this model: the ladder parks for the window
+# and names SPEQQ_CONTEXT_WINDOW as the fix, once, on stderr.
 
 set -u
 
@@ -172,6 +174,20 @@ def run():
     # rungs nudges once, for the highest.
     due = [r for r in RUNGS if r > fired and pct >= r]
     if not due:
+        raise SystemExit(0)
+    if pct > 100 and not (ENV_WINDOW or record_window):
+        # A fill above 100% against the assumed default proves the default
+        # window is wrong for this model (Claude transcripts never name
+        # theirs). Guessing a bigger window would guess the nudge points
+        # too - park the ladder for this window and say so once; the flag
+        # keeps the line from repeating on every tool call.
+        with open(flag, "w") as handle:
+            handle.write("%.1f" % max(RUNGS))
+        sys.stderr.write(
+            "speqq context-watch: measured %d tokens against the assumed %d-token window - "
+            "set SPEQQ_CONTEXT_WINDOW to the real model window; nudges are parked for this window\n"
+            % (used, window)
+        )
         raise SystemExit(0)
     rung = max(due)
     final = rung == max(RUNGS)

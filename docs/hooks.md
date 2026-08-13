@@ -175,7 +175,11 @@ usage-bearing record — Claude Code's assistant records carry `message.usage`;
 Codex rollouts carry `token_count` records that also name the model's own
 window — and computes how full the context window is. The denominator is
 `SPEQQ_CONTEXT_WINDOW` when set, else the window the transcript names (Codex
-does), else 200000. One Codex nuance: usage records land at each turn's end,
+does), else 200000. Claude transcripts never name theirs, so on a
+larger-window model the measured fill can overshoot 100% of that default —
+the ladder then parks itself for the window and prints one stderr line
+naming `SPEQQ_CONTEXT_WINDOW` as the fix, rather than false-alarming an
+imminent compaction. One Codex nuance: usage records land at each turn's end,
 so the ladder reads from the second turn of a window on — the first turn has
 nothing to measure yet. As the window fills it nudges the live agent at three
 rungs — 30%, 60%, and 85% by default (`SPEQQ_CONTEXT_NUDGE_PCT` takes a

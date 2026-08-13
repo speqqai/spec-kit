@@ -22,6 +22,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Grep|Glob|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=claude-code \"${CLAUDE_PLUGIN_ROOT}/skills/spec-setup/hooks/spec-read-first.sh\"",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PreCompact": [

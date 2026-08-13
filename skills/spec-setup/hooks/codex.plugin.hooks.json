@@ -51,6 +51,17 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex \"${PLUGIN_ROOT}/skills/spec-setup/hooks/spec-read-first.sh\"",
+            "statusMessage": "Speqq read-first tip",
+            "timeout": 5
+          }
+        ]
       }
     ]
   }

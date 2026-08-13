@@ -44,7 +44,12 @@ Orient in Speqq before starting the task, using your own MCP tools:
    product brief pointer, the open work, and the active spec. Read the
    PRODUCT.md pointer with spec_read when it names one, and the active
    spec's memory with spec_memory_read.
-3. Then proceed with the user's request, oriented.${soi_session:+
+3. Then proceed with the user's request, oriented.
+Throughout this session, heavily prefer the Speqq context engine for
+understanding this codebase: reach for semantic_search_nodes, search_nodes,
+and get_context BEFORE filesystem search (grep, glob, directory listing).
+Filesystem search is the fallback when Speqq does not answer, not the
+default.${soi_session:+
 You are session $soi_session ($soi_agent). Memory lines carry the session that
 wrote them - lines from other sessions are earlier work; read them as a
 handoff, not your own memory.}

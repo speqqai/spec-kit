@@ -26,16 +26,14 @@ One command via [skills.sh](https://skills.sh) — the CLI detects the harnesses
 
 Every skill reads and writes through the Speqq MCP server. Each one checks the connection before doing anything and walks you through this setup if it is missing.
 
-1. In Speqq, open **Settings → MCP Tokens** and create a token. Copy it — it is shown once.
-2. Add the Speqq MCP server — `https://speqq.com/mcp`, authenticated with your token as a Bearer header. In Claude Code:
+1. Register the server and sign in with your browser — no token needed. In Claude Code:
 
    ```bash
-   claude mcp add --transport http speqq https://speqq.com/mcp \
-     --header "Authorization: Bearer <your-token>"
+   claude mcp add --transport http speqq https://speqq.com/mcp
    ```
 
-   For Codex CLI, Cursor, and Gemini CLI, add the same URL and header to the harness's MCP config file — see [docs/connect-speqq.md](docs/connect-speqq.md).
-3. Restart the session so the Speqq tools load.
+   then run `/mcp` in a session and authenticate. In Codex CLI, add the `[mcp_servers.speqq]` entry with `auth = "oauth"` and run `codex mcp login speqq`. Per-harness entries — plus the bearer-token alternative for service accounts — are in [docs/connect-speqq.md](docs/connect-speqq.md).
+2. Restart the session so the Speqq tools load.
 
 ### 3. Write your first spec
 
@@ -62,7 +60,7 @@ Ask your agent to spec a feature:
 
 | Skill | What it writes | When to use it |
 | --- | --- | --- |
-| `spec-setup` | The connection itself: the harness MCP registration, the `~/.speqq/credentials` skeleton (you paste the token in yourself — the agent never sees it), and the SessionStart hook entries | Connect Speqq for the first time; install or repair the session hooks |
+| `spec-setup` | The connection itself: the harness MCP registration (OAuth first — no token), the session hook entries, and — only if you want the token-fed extras — the `~/.speqq/credentials` skeleton you paste into yourself | Connect Speqq for the first time; install or repair the session hooks |
 | `spec-init` | The spec shell, the matching queue item, the link between them, priority, and `in_progress` — one act, so none of it gets forgotten | Start something new and get it properly set up |
 | `spec-research` | Findings worth keeping, appended to the spec's memory as they are found | Get up to speed before specifying: what is true today, what is already decided, what is open |
 

@@ -2,14 +2,15 @@
 name: spec-setup
 description: >-
   Connect a machine to Speqq and wire up the session hooks. Checks whether
-  the Speqq MCP tools are reachable, walks the user through creating a token
-  and registering the MCP server for the harness in use — Claude Code or
-  Codex CLI — creates the ~/.speqq/credentials skeleton the hooks read (the
-  user pastes the token in themselves; the agent never sees it), and merges
-  the full hook pack — SessionStart, PostToolUse, PreCompact, SessionEnd —
-  into the harness config. Use when a user wants to connect Speqq, set up
-  the MCP server, install or repair the session hooks, or when another
-  skill's preflight found Speqq unreachable. Re-running refreshes; it never
+  the Speqq MCP tools are reachable, registers the MCP server for the
+  harness in use — Claude Code or Codex CLI, OAuth first so no token is
+  needed — and merges the full hook pack — SessionStart, PostToolUse,
+  PreCompact, SessionEnd — into the harness config. The optional hook token
+  (rich-mode injection and the loss-point memory writes) gets a
+  ~/.speqq/credentials skeleton the user pastes into themselves; the agent
+  never sees it. Use when a user wants to connect Speqq, set up the MCP
+  server, install or repair the session hooks, or when another skill's
+  preflight found Speqq unreachable. Re-running refreshes; it never
   duplicates.
 ---
 
@@ -37,10 +38,11 @@ Establish what already works before changing anything.
 1. **Are the Speqq MCP tools loaded?** Call `list_workspaces`. If it answers,
    the harness connection is done — skip the walkthrough and go straight to
    the hook install.
-2. **Does the credentials file exist?** `ls -la ~/.speqq/credentials` — check
-   existence and permissions only. **Never `cat` this file**; it holds the
-   token. If it exists but is group- or world-readable, run
-   `chmod 600 ~/.speqq/credentials` and say so.
+2. **Does the credentials file exist?** (Optional — only rich mode and the
+   loss-point memory writes need it; absent is the normal instruction-mode
+   default.) `ls -la ~/.speqq/credentials` — check existence and permissions
+   only. **Never `cat` this file**; it holds the token. If it exists but is
+   group- or world-readable, run `chmod 600 ~/.speqq/credentials` and say so.
 3. **Are the hooks merged — all four events?** Look for entries pointing at
    `spec-setup/hooks/` scripts under `SessionStart`, `PostToolUse`,
    `PreCompact`, and `SessionEnd` in the harness config: `.claude/settings.json`
@@ -58,37 +60,39 @@ thing: the harness registration gives the *agent* its MCP tools; the
 credentials file gives the *hooks* theirs, because a SessionStart hook runs
 outside the harness's MCP client. Set up both.
 
-1. **The user creates a token.** In Speqq: **Settings → MCP Tokens**, create a
-   token, copy it. It is shown once. It stays in their clipboard — do not ask
-   them to paste it into the conversation.
-2. **The user registers the MCP server** — the form for the harness in use,
-   with placeholders; they substitute the token themselves in their own
-   terminal or editor. For Claude Code:
+1. **Register the MCP server — OAuth first, no token involved.** For Claude
+   Code:
 
    ```bash
-   claude mcp add --transport http speqq https://speqq.com/mcp \
-     --header "Authorization: Bearer <your-token>"
+   claude mcp add --transport http speqq https://speqq.com/mcp
    ```
 
-   For Codex CLI, they add to `~/.codex/config.toml` (or a trusted project's
-   `.codex/config.toml`):
+   then the user runs `/mcp` in a session and authenticates — their browser
+   opens a Speqq login. For Codex CLI, add to `~/.codex/config.toml` (or a
+   trusted project's `.codex/config.toml`):
 
    ```toml
    [mcp_servers.speqq]
    url = "https://speqq.com/mcp"
-   bearer_token_env_var = "SPEQQ_MCP_TOKEN"
+   auth = "oauth"
    ```
 
-   and export `SPEQQ_MCP_TOKEN="<their-token>"` in their shell profile —
-   Codex rejects a literal bearer-token key in `config.toml`; the env-var
-   indirection is the supported form. They confirm with `codex mcp list`.
+   then the user runs `codex mcp login speqq`. Confirm with
+   `claude mcp list` / `codex mcp list`.
 
-   For Cursor or Gemini CLI, the same URL and Authorization header go in that
-   harness's own MCP config; the session hooks below do not run there yet,
-   but every skill does. The command or file contains the token, which is
-   exactly why the agent gives instructions instead of running them.
-3. **Create the credentials skeleton.** This part the agent does — it contains
-   no secret:
+   If a harness cannot OAuth (Cursor and Gemini CLI vary; service accounts
+   prefer it), fall back to a bearer token the USER substitutes themselves:
+   Claude Code takes `--header "Authorization: Bearer <token>"` on the add
+   command; Codex takes `bearer_token_env_var = "SPEQQ_MCP_TOKEN"` in the
+   entry (never a literal token key) with the env var exported in their
+   shell profile. Tokens come from **Settings → MCP Tokens** in Speqq,
+   shown once, and stay in the user's hands — the command or file contains
+   the token, which is exactly why the agent gives instructions instead of
+   running them.
+2. **(Optional) the hook token — only for rich mode and the loss-point
+   memory writes.** Skip unless the user wants those; the hooks work
+   without any credentials. When opting in, the agent creates the skeleton —
+   it contains no secret:
 
    ```bash
    mkdir -p ~/.speqq && chmod 700 ~/.speqq
@@ -105,7 +109,7 @@ outside the harness's MCP client. Set up both.
    in it, and never verify their paste by reading the file — verify by running
    the hook (below), whose output proves the credential works without showing
    it.
-4. **Restart the session** so the MCP tools load, then confirm with
+3. **Restart the session** so the MCP tools load, then confirm with
    `list_workspaces`.
 
 ## Install the hooks
@@ -177,13 +181,13 @@ resolve them first:
      | sh <skill-path>/hooks/session-start.sh
    ```
 
-   Read the output and report what it means. Connected: a
+   Read the output and report what it means. With a hook token: a
    `Speqq connected - workspace <name> (<id>) - session install-` line followed
-   by the workspace context. No credentials yet: a setup-guidance block, which
-   means the walkthrough above is unfinished. Anything else: stdout stays empty
-   and one stderr line names the cause — an unreachable server, a rejected
-   token, an ambiguous workspace. The script always exits 0; judge it by its
-   output, never its exit code.
+   by the workspace context. Without one: the orient instruction — that is
+   instruction mode, the default, and it means the hooks work. Anything else:
+   stdout stays empty and one stderr line names the cause — an unreachable
+   server, a rejected token, an ambiguous workspace. The script always exits
+   0; judge it by its output, never its exit code.
 
 4. **Tell the user to restart the session** (or run `/hooks` — both harnesses
    have it — to confirm the entries were picked up). The next session opens

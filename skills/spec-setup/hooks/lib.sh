@@ -256,9 +256,11 @@ credential_from_file() {
   grep "^$1=" "$SPEQQ_CREDENTIALS_PATH" 2>/dev/null | tail -n 1 | cut -d '=' -f 2- | tr -d '\r'
 }
 
-# Sets SPEQQ_CONNECTED=1 when a URL and token are resolved, 0 when neither
-# exists anywhere (the not-connected case speqq-setup.sh turns into setup
-# guidance). A half-configured state names the missing variable and gives up.
+# Sets SPEQQ_CONNECTED=1 only when BOTH a URL and a token are resolved.
+# No token — including the skeleton file whose token line is still empty —
+# is the normal instruction-mode case, not an error: the dispatcher injects
+# an orient instruction and the agent uses its own MCP connection instead.
+# A token without a URL is genuinely broken config and gives up by name.
 resolve_credentials() {
   SPEQQ_CREDENTIALS_PATH=${SPEQQ_CREDENTIALS_FILE:-$HOME/.speqq/credentials}
   if [ -f "$SPEQQ_CREDENTIALS_PATH" ]; then
@@ -275,15 +277,12 @@ resolve_credentials() {
     [ -n "${SPEQQ_WORKSPACE_ID:-}" ] || SPEQQ_WORKSPACE_ID=$(credential_from_file SPEQQ_WORKSPACE_ID)
   fi
 
-  if [ -z "${SPEQQ_MCP_URL:-}" ] && [ -z "${SPEQQ_MCP_TOKEN:-}" ]; then
+  if [ -z "${SPEQQ_MCP_TOKEN:-}" ]; then
     SPEQQ_CONNECTED=0
     return 0
   fi
   if [ -z "${SPEQQ_MCP_URL:-}" ]; then
     give_up 'SPEQQ_MCP_TOKEN is set but SPEQQ_MCP_URL is not - set both, in the environment or the credentials file'
-  fi
-  if [ -z "${SPEQQ_MCP_TOKEN:-}" ]; then
-    give_up 'SPEQQ_MCP_URL is set but SPEQQ_MCP_TOKEN is not - set both, in the environment or the credentials file'
   fi
   # shellcheck disable=SC2034 # read by session-start.sh and speqq-setup.sh
   SPEQQ_CONNECTED=1

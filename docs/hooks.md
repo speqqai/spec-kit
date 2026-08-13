@@ -1,9 +1,22 @@
 # Session hooks
 
 Spec-Kit ships an optional hook pack inside the `spec-setup` skill. When a
-coding session starts, the harness runs one script that opens a single
-connection to the Speqq MCP server and injects three things as session context —
-before you type anything:
+coding session starts, the harness runs one script that injects session
+context before you type anything. It works in one of two modes, picked
+automatically:
+
+**Instruction mode — the default; no credentials of any kind.** With no
+hook token on the machine, the script injects one orient instruction and
+the AGENT fetches its own context over the MCP connection the harness
+already authenticated: `spec_orient` on the current branch, the product
+brief, the active spec's memory tail. The hook contributes timing plus the
+two facts it can read locally without secrets — the git branch and the
+optional workspace id — and never touches the network.
+
+**Rich mode — opt-in; needs the hook token.** With a token in the
+environment or `~/.speqq/credentials`, the script opens a single connection
+to the Speqq MCP server itself and injects three things directly, costing
+the agent zero tool calls:
 
 1. **Connection status** — one line confirming the session is wired up:
 
@@ -35,7 +48,10 @@ where nobody thinks to ask for it.
 ## What fires them
 
 Both harnesses fire the same script on session start; the script reads the
-hook's stdin JSON (`session_id`, `source`) to tell the cases apart.
+hook's stdin JSON (`session_id`, `source`) to tell the cases apart. The
+table shows rich mode; in instruction mode every firing carries the orient
+instruction in place of the first three columns, and the summary
+instruction fires on compact all the same.
 
 | Session event | Connection status | Workspace context | Active work | Summary instruction |
 | --- | --- | --- | --- | --- |
@@ -79,9 +95,11 @@ them.
 
 ## spec-memory
 
-The pack also ships one write hook, `spec-memory.sh`. Where the session-start
-script reads Speqq into the session, this one writes the session back — at the
-two moments its context is about to be lost:
+The pack also ships one write hook, `spec-memory.sh` — the one piece that
+genuinely requires the hook token, because it runs at moments where no agent
+turn exists and nothing but the hook itself can make the write. Where the
+session-start script reads Speqq into the session, this one writes the
+session back — at the two moments its context is about to be lost:
 
 | Event | When it fires | The recorded line ends up saying |
 | --- | --- | --- |
@@ -223,10 +241,12 @@ And one discipline underneath them: stdout carries only the injected context
 itself. Everything else — status, warnings, causes — goes to stderr, so the
 agent's context is never polluted with plumbing.
 
-## Credentials
+## The hook token (optional)
 
-The script resolves its connection in two layers; the first one that answers
-wins.
+Everything above the loss-point writes works with no credentials at all —
+instruction mode is the default. Add the hook token only for rich mode's
+zero-call injection and the `spec-memory.sh` lines. The script resolves it
+in two layers; the first one that answers wins.
 
 | Key | Meaning |
 | --- | --- |
@@ -242,10 +262,10 @@ wins.
    group- or world-readable the hook prints one warning naming the fix and
    continues.
 
-Neither layer present is **not an error** — it is the fresh-machine case, and
-the connection-status step answers it with setup guidance instead of a
-diagnostic. The `spec-setup` skill creates the credentials file skeleton for
-you; you paste the token in yourself, and the agent never sees it.
+Neither layer present is **not an error** — it is the default, and the
+session runs in instruction mode. The `spec-setup` skill creates the
+credentials file skeleton for you when you opt in; you paste the token in
+yourself, and the agent never sees it.
 
 ## What is in the pack
 
@@ -284,8 +304,9 @@ printf '{"session_id":"install-check","source":"startup"}' \
   | sh .claude/skills/spec-setup/hooks/session-start.sh
 ```
 
-Connected, you get the status line and the workspace context on stdout. Not
-connected, you get the setup guidance. Anything broken, stdout stays empty and
+With a hook token, you get the status line and the workspace context on
+stdout. Without one, you get the orient instruction — instruction mode, the
+default, and proof the hook works. Anything broken, stdout stays empty and
 one stderr line names the cause. The exit code is always 0 — judge the hook by
 its output.
 

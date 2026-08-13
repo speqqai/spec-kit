@@ -10,9 +10,10 @@
 # summary and its MCP tools, so this step injects one direct instruction and
 # the agent writes the entry another agent can actually resume from.
 #
-# stdout here IS the injection — that is the point of this step. It prints
-# nothing unless the dispatcher resolved a connection (it runs after
-# open_session), so the instruction never references tools that cannot work.
+# stdout here IS the injection — that is the point of this step. It runs in
+# both dispatcher modes: the tools it names are the AGENT's own MCP tools,
+# not the hook's, so it needs no hook credentials — and its final clause
+# already covers the session where those tools turn out to be absent.
 
 case ${0##*/} in
 spec-memory-summary.sh)

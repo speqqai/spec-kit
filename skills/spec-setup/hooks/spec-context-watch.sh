@@ -36,7 +36,7 @@
 #     post-compaction firing so the next window climbs the ladder again.
 #   - Never blocks anything: every path exits 0.
 #
-# Env: SPEQQ_CONTEXT_NUDGE_PCT (comma list of rungs, default "30,60,85"),
+# Env: SPEQQ_CONTEXT_NUDGE_PCT (comma list of rungs, default "20,40,60,80"),
 # SPEQQ_CONTEXT_WINDOW (overrides everything; default is the transcript's
 # own window when it names one, else 200000), SPEQQ_HOOK_AGENT (attribution
 # name for the instruction). A fill that overshoots the assumed default
@@ -45,7 +45,7 @@
 
 set -u
 
-SM_NUDGE_PCT=${SPEQQ_CONTEXT_NUDGE_PCT:-30,60,85}
+SM_NUDGE_PCT=${SPEQQ_CONTEXT_NUDGE_PCT:-20,40,60,80}
 SM_WINDOW=${SPEQQ_CONTEXT_WINDOW:-}
 SM_AGENT=${SPEQQ_HOOK_AGENT:-claude-code}
 SM_BRANCH=$(git branch --show-current 2>/dev/null) || SM_BRANCH=''
@@ -215,12 +215,14 @@ def run():
     instruction = opening + (
         "first find the queue item whose branch is %s (%s), then take that item"
         "\u2019s linked_document_id - that is the active spec - and call "
-        "spec_memory_append on it with agent \"%s\", session_id \"%s\", and 2-4 "
-        "sentences in your own words: what you are doing, the current state (what "
-        "works, what is unfinished), and the immediate next step. Then continue the "
-        "task. If no queue item claims this branch, or the Speqq queue or "
-        "spec_memory_append tools are not available in this session, skip the "
-        "update and continue." % (where, lookup, AGENT, session)
+        "spec_memory_append on it with agent \"%s\", session_id \"%s\", and one "
+        "entry of 2-4 sentences leading with a past-tense verb (Built, Committed "
+        "<hash>, Proved, Decided, Dropped, Blocked): what happened since the last "
+        "entry, why, the current state (what works, what is unfinished), and the "
+        "immediate next step - so the memory reads top to bottom as the story of "
+        "the work. Then continue the task. If no queue item claims this branch, "
+        "or the Speqq queue or spec_memory_append tools are not available in this "
+        "session, skip the update and continue." % (where, lookup, AGENT, session)
     )
     print(
         json.dumps(

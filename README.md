@@ -2,7 +2,7 @@
 
 **Spec-driven development for coding agents — with every spec living in Speqq, not in loose markdown files.**
 
-Speqq Spec-Kit is a set of fifteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn Claude Code, Codex CLI, Cursor, or Gemini CLI into a spec-driven planner. It follows the lineage of GitHub's spec-kit with one fundamental difference: every artifact lands in a Speqq workspace over MCP — live collaboration, a real work queue, row-level execution status. No `specs/` directory. No state files. Zero local state.
+Speqq Spec-Kit is a set of sixteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn Claude Code, Codex CLI, Cursor, or Gemini CLI into a spec-driven planner. It follows the lineage of GitHub's spec-kit with one fundamental difference: every artifact lands in a Speqq workspace over MCP — live collaboration, a real work queue, row-level execution status. No `specs/` directory. No state files. Zero local state.
 
 ## What spec-driven development in Speqq means
 
@@ -62,6 +62,7 @@ Ask your agent to spec a feature:
 | Skill | What it writes | When to use it |
 | --- | --- | --- |
 | `spec-setup` | The connection itself: the harness MCP registration (OAuth first — no token), the session hook entries, and — only if you want the token-fed extras — the `~/.speqq/credentials` skeleton you paste into yourself | Connect Speqq for the first time; install or repair the session hooks |
+| `spec-update` | The update itself: detects the install channel (plugin or folders), checks installed vs latest, runs the update, and names the reconcile steps — new session, `/hooks` re-trust on Codex when hooks changed | Update the kit, or check whether a newer version exists |
 | `spec-init` | The spec shell, the matching queue item, the link between them, priority, and `in_progress` — one act, so none of it gets forgotten | Start something new and get it properly set up |
 | `spec-research` | Findings worth keeping, appended to the spec's memory as they are found | Get up to speed before specifying: what is true today, what is already decided, what is open |
 

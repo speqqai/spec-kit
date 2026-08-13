@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "spec-kit",
-      "description": "Spec-driven development with Speqq: fifteen skills, session hooks that orient every session in your workspace, and the Speqq MCP connection - one install.",
+      "description": "Spec-driven development with Speqq: sixteen skills, session hooks that orient every session in your workspace, and the Speqq MCP connection - one install.",
       "author": {
         "name": "Speqq"
       },

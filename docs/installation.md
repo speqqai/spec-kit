@@ -2,7 +2,27 @@
 
 Speqq Spec-Kit is a set of fifteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn your coding agent into a spec-driven planner whose specs live in Speqq instead of loose markdown files. One install covers every supported harness.
 
-## Install
+## Install as a plugin — Claude Code and Codex
+
+One install delivers the skills, the session hooks, and the Speqq MCP registration.
+
+**Claude Code:**
+
+```bash
+claude plugin marketplace add speqqai/spec-kit
+claude plugin install spec-kit@speqq
+```
+
+**Codex CLI:**
+
+```bash
+codex plugin marketplace add speqqai/spec-kit
+codex plugin add spec-kit@speqq
+```
+
+Start a new session after installing. On Claude Code the hooks are active immediately; on Codex, review and approve them once with `/hooks` — Codex never auto-trusts plugin hooks. Then sign in: run `/mcp` in a Claude Code session, or `codex mcp login speqq` on Codex. Plugin skills are namespaced: `/spec-kit:spec-product` on Claude Code, `$spec-kit:spec-product` on Codex; plain-language requests trigger them the same as before.
+
+## Install as folders — any harness
 
 ```bash
 npx skills add speqqai/spec-kit
@@ -86,4 +106,4 @@ Wiring is one merge into your harness config, and the hooks need no credentials 
 
 ## Coming soon
 
-Still on the roadmap: enforced status sync, phase auto-commit, and branch-guard hooks, plus one-install plugins for Claude Code and Codex that bundle the skills together with the Speqq MCP connection.
+Still on the roadmap: enforced status sync, phase auto-commit, and branch-guard hooks.

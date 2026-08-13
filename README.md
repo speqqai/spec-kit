@@ -14,26 +14,27 @@ For engineers, the payoff is zero local state and a live dashboard. There is no 
 
 ## Get started
 
-### 1. Install the skills
+### 1. Install the plugin
+
+One install delivers the skills, the session hooks, and the Speqq MCP registration. Claude Code:
 
 ```bash
-npx skills add speqqai/spec-kit
+claude plugin marketplace add speqqai/spec-kit
+claude plugin install spec-kit@speqq
 ```
 
-One command via [skills.sh](https://skills.sh) — the CLI detects the harnesses you have set up and installs all fifteen skills into the ones you confirm.
+Codex CLI:
 
-### 2. Connect the Speqq MCP server
+```bash
+codex plugin marketplace add speqqai/spec-kit
+codex plugin add spec-kit@speqq
+```
 
-Every skill reads and writes through the Speqq MCP server. Each one checks the connection before doing anything and walks you through this setup if it is missing.
+Start a new session after installing; on Codex, approve the hooks once with `/hooks`. For Cursor, Gemini CLI, or a folders-only install, use `npx skills add speqqai/spec-kit` via [skills.sh](https://skills.sh) — see [docs/installation.md](docs/installation.md).
 
-1. Register the server and sign in with your browser — no token needed. In Claude Code:
+### 2. Sign in to Speqq
 
-   ```bash
-   claude mcp add --transport http speqq https://speqq.com/mcp
-   ```
-
-   then run `/mcp` in a session and authenticate. In Codex CLI, add the `[mcp_servers.speqq]` entry with `auth = "oauth"` and run `codex mcp login speqq`. Per-harness entries — plus the bearer-token alternative for service accounts — are in [docs/connect-speqq.md](docs/connect-speqq.md).
-2. Restart the session so the Speqq tools load.
+Every skill reads and writes through the Speqq MCP server the plugin just registered — no token needed. Run `/mcp` in a Claude Code session, or `codex mcp login speqq` on Codex, and finish the browser login. The bearer-token alternative for service accounts is in [docs/connect-speqq.md](docs/connect-speqq.md).
 
 ### 3. Write your first spec
 
@@ -139,7 +140,6 @@ All four install with the same command. The MCP server is `https://speqq.com/mcp
 Planned, not yet shipped:
 
 - **Deeper hook packs** — enforced status sync, phase auto-commit, and a branch guard. Session context injection already ships: `spec-setup` carries session hooks for Claude Code and Codex CLI — see [docs/hooks.md](docs/hooks.md).
-- **One-install plugins** for Claude Code and Codex that bundle the skills and the Speqq MCP connection in a single install.
 
 ## Documentation
 

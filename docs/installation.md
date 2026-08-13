@@ -1,6 +1,6 @@
 # Installation
 
-Speqq Spec-Kit is a set of sixteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn your coding agent into a spec-driven planner whose specs live in Speqq instead of loose markdown files. One install covers every supported harness.
+Speqq Spec-Kit is a set of [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn your coding agent into a spec-driven planner whose specs live in Speqq instead of loose markdown files. One install covers every supported harness.
 
 ## Install as a plugin — Claude Code and Codex
 
@@ -28,7 +28,7 @@ Start a new session after installing. On Claude Code the hooks are active immedi
 npx skills add speqqai/spec-kit
 ```
 
-The `skills` CLI detects the coding agents you have set up, asks you to confirm which get the skills, and installs all sixteen into each one you confirm. Each skill is a folder containing a `SKILL.md`; the agent loads it when the task matches the skill's description or when you invoke it by name.
+The `skills` CLI detects the coding agents you have set up, asks you to confirm which get the skills, and installs them all into each one you confirm. Each skill is a folder containing a `SKILL.md`; the agent loads it when the task matches the skill's description or when you invoke it by name.
 
 Installs are project-level by default. Useful flags:
 
@@ -55,6 +55,7 @@ Installs are project-level by default. Useful flags:
 | `spec-research` | Reads what exists today and records the findings worth keeping |
 | `spec-setup` | Connects Speqq — walks you through the MCP token and server registration, creates the credentials skeleton, and wires up the session hooks |
 | `spec-update` | Updates an installed kit — plugin or folders — and reconciles the hooks after |
+| `speqq-mcp-connect` | Checks the Speqq MCP connection and repairs it — registers a missing server, walks through re-authentication, says when a new session is needed |
 | `spec-start` | Opens a session on a spec and records what the run is going after |
 | `spec-pause` | Closes a session: where the work stands, and honest row statuses |
 | `spec-snippet` | Appends one line to a spec's memory, on demand |

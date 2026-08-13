@@ -58,11 +58,18 @@ that makes the second one happen without anyone asking.
 `startup|resume|clear` and `compact`) running
 `$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/session-start.sh` with a
 15-second harness timeout. **Codex CLI** takes the same shape in
-`~/.codex/hooks.json`. Codex floors differ per event: SessionStart needs
-0.114.0 (its `compact` source 0.133.0), PreCompact and the PostToolUse
-ladder 0.129.0, SessionEnd 0.145.0 — the full pack wants 0.145.0 or newer; Codex
-trust-gates newly added hooks, so review and enable the entry with `/hooks` in
-the TUI. On some Codex builds a bare `codex` that silently restores the
+`~/.codex/hooks.json` (a trusted project can carry `.codex/hooks.json`
+instead). The pack is tested on Codex 0.147.0; the approximate floors per
+event: SessionStart 0.114.0 (its `compact` source 0.133.0), PreCompact and
+the PostToolUse ladder 0.129.0, SessionEnd 0.145.0 — name what an older build
+loses rather than refusing it. The Codex fragment already fits two Codex
+limits: SessionEnd hooks get three seconds at most (its entry trims the
+shared deadline to two), and the SessionStart entries lift the default
+2,500-character cap that would truncate the injected context. Codex
+trust-gates hooks: review and enable each entry with `/hooks` in the TUI —
+and expect the same review again after any change to an entry, because trust
+is keyed to the entry's content. On some Codex builds a bare `codex` that
+silently restores the
 previous thread skips `SessionStart` entirely
 ([openai/codex#24228](https://github.com/openai/codex/issues/24228)); starting
 a genuinely new session is the workaround.
@@ -161,8 +168,11 @@ deadline as every other step.
 The one thing a compaction hook can never do is put text in front of the
 model — so the pack gets ahead of compaction instead. `spec-context-watch.sh`
 runs on `PostToolUse` (every tool call), reads the session transcript's last
-assistant record for its `message.usage` token counts, and computes how full
-the context window is. As the window fills it nudges the live agent at three
+usage-bearing record — Claude Code's assistant records carry `message.usage`;
+Codex rollouts carry `token_count` records that also name the model's own
+window — and computes how full the context window is. The denominator is
+`SPEQQ_CONTEXT_WINDOW` when set, else the window the transcript names (Codex
+does), else 200000. As the window fills it nudges the live agent at three
 rungs — 30%, 60%, and 85% by default (`SPEQQ_CONTEXT_NUDGE_PCT` takes a
 comma list) — each time injecting one instruction the model reads on its
 next request: record where the work stands in spec memory — resolve the
@@ -183,8 +193,8 @@ with its own MCP tools.
 
 ## The four invariants
 
-Every path through both scripts holds four rules. They are what make a hook
-safe to run around every session:
+Every path through all three executables holds four rules. They are what make
+a hook safe to run around every session:
 
 1. **It never blocks a session.** Every failure exits 0. Missing credentials,
    an unreachable server, a rejected token — the session starts anyway, just
@@ -241,7 +251,9 @@ Everything lives in the skill's own directory,
 | `spec-workspace-context.sh` | The workspace-context step |
 | `spec-active-work.sh` | The recall step — open work, the active spec's memory tail, and the session identity coda |
 | `spec-memory.sh` | The write hook — records one memory line at `PreCompact` and `SessionEnd` |
-| `claude-code.settings.json` | The `SessionStart`, `PreCompact`, and `SessionEnd` entries to merge into `.claude/settings.json` |
+| `spec-context-watch.sh` | The checkpoint ladder — fires on `PostToolUse`, nudging the agent to save state as the window fills |
+| `spec-memory-summary.sh` | The post-compaction step — instructs the agent to write a real summary to spec memory |
+| `claude-code.settings.json` | The `SessionStart`, `PostToolUse`, `PreCompact`, and `SessionEnd` entries to merge into `.claude/settings.json` |
 | `codex.hooks.json` | The same shape for `~/.codex/hooks.json` |
 
 Requires `curl` and `python3` on `PATH`, and `git` to read the branch (no git,
@@ -270,15 +282,16 @@ its output.
 
 ## Remove
 
-Delete the merged `SessionStart`, `PreCompact`, and `SessionEnd` entries from
+Delete the merged `SessionStart`, `PostToolUse`, `PreCompact`, and
+`SessionEnd` entries from
 `.claude/settings.json` (or `~/.codex/hooks.json`) and restart the harness. Nothing else is left behind:
 the hooks write no state, no cache, and no files outside a temp directory
 removed on exit. The skills keep working without them.
 
 ## Harness support, honestly
 
-The hooks run on **Claude Code** and **Codex CLI** (SessionStart from
-0.114.0; the full pack from 0.145.0) today. Cursor
+The hooks run on **Claude Code** and **Codex CLI** (tested on 0.147.0) today.
+Cursor
 and Gemini CLI both have session-start hook systems, but each requires a
 single JSON object on stdout — Gemini treats plain text as a parse failure —
 and these hooks write plain text. Until that is wired, the hooks are not

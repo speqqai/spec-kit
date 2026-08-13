@@ -66,7 +66,7 @@ Ask your agent to spec a feature:
 | `spec-init` | The spec shell, the matching queue item, the link between them, priority, and `in_progress` — one act, so none of it gets forgotten | Start something new and get it properly set up |
 | `spec-research` | Findings worth keeping, appended to the spec's memory as they are found | Get up to speed before specifying: what is true today, what is already decided, what is open |
 
-`spec-research` runs `spec-init` first when no spec exists — findings need a memory to land in. `spec-setup` also carries the session hooks: an optional SessionStart hook pack for Claude Code and Codex CLI that injects connection status and workspace orientation before you type anything — see [docs/hooks.md](docs/hooks.md).
+`spec-research` runs `spec-init` first when no spec exists — findings need a memory to land in. `spec-setup` also carries the session hooks: an optional hook pack for Claude Code and Codex CLI that injects connection status, workspace orientation, and your active work before you type anything — see [docs/hooks.md](docs/hooks.md).
 
 ## The four session skills
 
@@ -140,7 +140,7 @@ All four install with the same command. The MCP server is `https://speqq.com/mcp
 
 Planned, not yet shipped:
 
-- **Deeper hook packs** — enforced status sync, phase auto-commit, and a branch guard. Session context injection already ships: `spec-setup` carries SessionStart hooks for Claude Code and Codex CLI — see [docs/hooks.md](docs/hooks.md).
+- **Deeper hook packs** — enforced status sync, phase auto-commit, and a branch guard. Session context injection already ships: `spec-setup` carries session hooks for Claude Code and Codex CLI — see [docs/hooks.md](docs/hooks.md).
 - **One-install plugins** for Claude Code and Codex that bundle the skills and the Speqq MCP connection in a single install.
 
 ## Documentation

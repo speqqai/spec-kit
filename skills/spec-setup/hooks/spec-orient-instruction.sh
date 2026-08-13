@@ -49,7 +49,10 @@ Throughout this session, heavily prefer the Speqq context engine for
 understanding this codebase: reach for semantic_search_nodes, search_nodes,
 and get_context BEFORE filesystem search (grep, glob, directory listing).
 Filesystem search is the fallback when Speqq does not answer, not the
-default.${soi_session:+
+default.
+Keep the active spec${soi_branch:+ (the one linked to branch "$soi_branch")} current as you work: append one
+spec_memory_append line after every commit, every proven result, and every
+change of direction - not only when a checkpoint asks.${soi_session:+
 You are session $soi_session ($soi_agent). Memory lines carry the session that
 wrote them - lines from other sessions are earlier work; read them as a
 handoff, not your own memory.}

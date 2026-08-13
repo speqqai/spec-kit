@@ -4,10 +4,18 @@
 # Everything else in this directory is sourced from here.
 #
 # Flow: parse the hook payload on stdin ONCE (session_id, source), resolve
-# credentials (environment first, then the credentials file), open ONE MCP
-# session against the Speqq server, resolve the workspace, then run the
-# steps in order under one shared wall-clock deadline (8 seconds total,
-# SPEQQ_HOOK_TIMEOUT_SECONDS overrides):
+# credentials (environment first, then the credentials file), then pick the
+# mode:
+#
+# INSTRUCTION MODE (no hook token - the default): inject one orient
+# instruction (spec-orient-instruction.sh) and let the AGENT fetch its own
+# context over the MCP connection the harness already authenticated. No
+# network from the hook, no credentials required.
+#
+# RICH MODE (a hook token resolved): open ONE MCP session against the Speqq
+# server, resolve the workspace, then run the steps in order under one
+# shared wall-clock deadline (8 seconds total, SPEQQ_HOOK_TIMEOUT_SECONDS
+# overrides):
 #
 #   speqq-setup.sh           run_speqq_setup        (skipped when source=compact)
 #   spec-workspace-context.sh run_workspace_context (always)
@@ -59,15 +67,18 @@ main() {
   resolve_credentials
 
   if [ "${SPEQQ_CONNECTED:-0}" -eq 0 ]; then
-    # No credentials anywhere: a fresh clone, not an error. The setup step
-    # turns this into onboarding context. Compaction reinjects working
-    # context, and onboarding text is not working context — skip it there.
+    # No hook token: instruction mode, the default. Inject one orient
+    # instruction and let the AGENT fetch context over its own MCP
+    # connection. After compaction the same instruction re-orients, the
+    # summary step asks for the agent-written record, and the ladder
+    # re-arms — exactly as in rich mode.
+    run_step spec-orient-instruction.sh run_orient_instruction
     if [ "${SPEQQ_SESSION_SOURCE:-}" = 'compact' ]; then
-      printf '%s: no Speqq credentials in the environment or %s - skipping\n' \
-        "$HOOK_NAME" "$SPEQQ_CREDENTIALS_PATH" >&2
-      exit 0
+      run_step spec-memory-summary.sh run_memory_summary
+      if [ -n "${SPEQQ_HARNESS_SESSION_ID:-}" ]; then
+        rm -f "${TMPDIR:-/tmp}/speqq-context-nudge-$SPEQQ_HARNESS_SESSION_ID" 2>/dev/null || :
+      fi
     fi
-    run_step speqq-setup.sh run_speqq_setup
     exit 0
   fi
 

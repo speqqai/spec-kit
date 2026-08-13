@@ -1,0 +1,68 @@
+{
+  "description": "Plugin-bundled Codex hooks: Speqq session context at session start; memory writes at compaction and session end; checkpoint ladder as context fills. Loaded automatically with the spec-kit plugin; Codex trust-gates plugin hooks - review with /hooks once after install and re-trust after any change. Tested on Codex 0.147.0.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex \"${PLUGIN_ROOT}/skills/spec-setup/hooks/session-start.sh\"",
+            "statusMessage": "Connecting to Speqq",
+            "timeout": 15,
+            "additionalContextLimit": 0
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex \"${PLUGIN_ROOT}/skills/spec-setup/hooks/spec-memory.sh\"",
+            "statusMessage": "Recording Speqq memory",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_TIMEOUT_SECONDS=2 SPEQQ_HOOK_AGENT=codex \"${PLUGIN_ROOT}/skills/spec-setup/hooks/spec-memory.sh\"",
+            "statusMessage": "Recording Speqq memory",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex \"${PLUGIN_ROOT}/skills/spec-setup/hooks/spec-context-watch.sh\"",
+            "statusMessage": "Speqq checkpoint",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex \"${PLUGIN_ROOT}/skills/spec-setup/hooks/spec-read-first.sh\"",
+            "statusMessage": "Speqq read-first tip",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

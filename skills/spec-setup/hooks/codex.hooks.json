@@ -1,5 +1,5 @@
 {
-  "description": "Speqq session context at session start; memory writes at compaction and session end (Codex >= 0.124.0).",
+  "description": "Speqq session context at session start; memory writes at compaction and session end; checkpoint ladder as context fills. Merge into ~/.codex/hooks.json (or a trusted project's .codex/hooks.json); Codex trust-gates hooks - review with /hooks and re-trust after any change to an entry. Tested on Codex 0.147.0; approximate floors: SessionStart 0.114.0 (compact source 0.133.0), PreCompact/PostToolUse 0.129.0, SessionEnd 0.145.0.",
   "hooks": {
     "SessionStart": [
       {
@@ -7,9 +7,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "SPEQQ_HOOK_AGENT=codex ./.claude/skills/spec-setup/hooks/session-start.sh",
+            "command": "SPEQQ_HOOK_AGENT=codex ./.agents/skills/spec-setup/hooks/session-start.sh",
             "statusMessage": "Connecting to Speqq",
-            "timeout": 15
+            "timeout": 15,
+            "additionalContextLimit": 0
           }
         ]
       },
@@ -18,9 +19,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "SPEQQ_HOOK_AGENT=codex ./.claude/skills/spec-setup/hooks/session-start.sh",
+            "command": "SPEQQ_HOOK_AGENT=codex ./.agents/skills/spec-setup/hooks/session-start.sh",
             "statusMessage": "Refreshing Speqq context",
-            "timeout": 15
+            "timeout": 15,
+            "additionalContextLimit": 0
           }
         ]
       }
@@ -31,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "SPEQQ_HOOK_AGENT=codex ./.claude/skills/spec-setup/hooks/spec-memory.sh",
+            "command": "SPEQQ_HOOK_AGENT=codex ./.agents/skills/spec-setup/hooks/spec-memory.sh",
             "statusMessage": "Recording Speqq memory",
             "timeout": 15
           }
@@ -43,9 +45,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "SPEQQ_HOOK_AGENT=codex ./.claude/skills/spec-setup/hooks/spec-memory.sh",
+            "command": "SPEQQ_HOOK_TIMEOUT_SECONDS=2 SPEQQ_HOOK_AGENT=codex ./.agents/skills/spec-setup/hooks/spec-memory.sh",
             "statusMessage": "Recording Speqq memory",
-            "timeout": 15
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex ./.agents/skills/spec-setup/hooks/spec-context-watch.sh",
+            "statusMessage": "Speqq checkpoint",
+            "timeout": 10
           }
         ]
       }

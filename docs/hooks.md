@@ -1,9 +1,22 @@
 # Session hooks
 
 Spec-Kit ships an optional hook pack inside the `spec-setup` skill. When a
-coding session starts, the harness runs one script that opens a single
-connection to the Speqq MCP server and injects three things as session context —
-before you type anything:
+coding session starts, the harness runs one script that injects session
+context before you type anything. It works in one of two modes, picked
+automatically:
+
+**Instruction mode — the default; no credentials of any kind.** With no
+hook token on the machine, the script injects one orient instruction and
+the AGENT fetches its own context over the MCP connection the harness
+already authenticated: `spec_orient` on the current branch, the product
+brief, the active spec's memory tail. The hook contributes timing plus the
+two facts it can read locally without secrets — the git branch and the
+optional workspace id — and never touches the network.
+
+**Rich mode — opt-in; needs the hook token.** With a token in the
+environment or `~/.speqq/credentials`, the script opens a single connection
+to the Speqq MCP server itself and injects three things directly, costing
+the agent zero tool calls:
 
 1. **Connection status** — one line confirming the session is wired up:
 
@@ -35,7 +48,10 @@ where nobody thinks to ask for it.
 ## What fires them
 
 Both harnesses fire the same script on session start; the script reads the
-hook's stdin JSON (`session_id`, `source`) to tell the cases apart.
+hook's stdin JSON (`session_id`, `source`) to tell the cases apart. The
+table shows rich mode; in instruction mode every firing carries the orient
+instruction in place of the first three columns, and the summary
+instruction fires on compact all the same.
 
 | Session event | Connection status | Workspace context | Active work | Summary instruction |
 | --- | --- | --- | --- | --- |
@@ -57,19 +73,33 @@ that makes the second one happen without anyone asking.
 **Claude Code** wires this as two `hooks.SessionStart` entries (matchers
 `startup|resume|clear` and `compact`) running
 `$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/session-start.sh` with a
-15-second harness timeout. **Codex CLI** (0.124.0 or newer — earlier builds
-have no hooks engine) takes the same shape in `~/.codex/hooks.json`; Codex
-trust-gates newly added hooks, so review and enable the entry with `/hooks` in
-the TUI. On some Codex builds a bare `codex` that silently restores the
-previous thread skips `SessionStart` entirely
-([openai/codex#24228](https://github.com/openai/codex/issues/24228)); starting
-a genuinely new session is the workaround.
+15-second harness timeout. **Codex CLI** takes the same shape in
+`~/.codex/hooks.json` (a trusted project can carry `.codex/hooks.json`
+instead — an untrusted project loads no project-scope hooks at all, so the
+global file is the dependable default). The pack is tested on Codex 0.147.0;
+the approximate floors per
+event: SessionStart 0.114.0 (its `compact` source 0.133.0), PreCompact and
+the PostToolUse ladder 0.129.0, SessionEnd 0.145.0 — name what an older build
+loses rather than refusing it. The Codex fragment already fits two Codex
+limits: SessionEnd hooks get three seconds at most (its entry trims the
+shared deadline to two), and the SessionStart entries lift the default
+2,500-character cap that would truncate the injected context. Codex
+trust-gates hooks: review and enable each entry with `/hooks` in the TUI —
+and expect the same review again after any change to an entry, because trust
+is keyed to the entry's content. Resumed Codex sessions run without the
+hooks: a bare `codex` that silently restores the previous thread skips
+`SessionStart` ([openai/codex#24228](https://github.com/openai/codex/issues/24228)),
+and `codex exec resume` was observed on 0.147.0 to fire no hooks at all —
+not even the PostToolUse ladder. Starting a genuinely new session restores
+them.
 
 ## spec-memory
 
-The pack also ships one write hook, `spec-memory.sh`. Where the session-start
-script reads Speqq into the session, this one writes the session back — at the
-two moments its context is about to be lost:
+The pack also ships one write hook, `spec-memory.sh` — the one piece that
+genuinely requires the hook token, because it runs at moments where no agent
+turn exists and nothing but the hook itself can make the write. Where the
+session-start script reads Speqq into the session, this one writes the
+session back — at the two moments its context is about to be lost:
 
 | Event | When it fires | The recorded line ends up saying |
 | --- | --- | --- |
@@ -159,8 +189,17 @@ deadline as every other step.
 The one thing a compaction hook can never do is put text in front of the
 model — so the pack gets ahead of compaction instead. `spec-context-watch.sh`
 runs on `PostToolUse` (every tool call), reads the session transcript's last
-assistant record for its `message.usage` token counts, and computes how full
-the context window is. As the window fills it nudges the live agent at three
+usage-bearing record — Claude Code's assistant records carry `message.usage`;
+Codex rollouts carry `token_count` records that also name the model's own
+window — and computes how full the context window is. The denominator is
+`SPEQQ_CONTEXT_WINDOW` when set, else the window the transcript names (Codex
+does), else 200000. Claude transcripts never name theirs, so on a
+larger-window model the measured fill can overshoot 100% of that default —
+the ladder then parks itself for the window and prints one stderr line
+naming `SPEQQ_CONTEXT_WINDOW` as the fix, rather than false-alarming an
+imminent compaction. One Codex nuance: usage records land at each turn's end,
+so the ladder reads from the second turn of a window on — the first turn has
+nothing to measure yet. As the window fills it nudges the live agent at three
 rungs — 30%, 60%, and 85% by default (`SPEQQ_CONTEXT_NUDGE_PCT` takes a
 comma list) — each time injecting one instruction the model reads on its
 next request: record where the work stands in spec memory — resolve the
@@ -181,8 +220,8 @@ with its own MCP tools.
 
 ## The four invariants
 
-Every path through both scripts holds four rules. They are what make a hook
-safe to run around every session:
+Every path through all three executables holds four rules. They are what make
+a hook safe to run around every session:
 
 1. **It never blocks a session.** Every failure exits 0. Missing credentials,
    an unreachable server, a rejected token — the session starts anyway, just
@@ -202,10 +241,12 @@ And one discipline underneath them: stdout carries only the injected context
 itself. Everything else — status, warnings, causes — goes to stderr, so the
 agent's context is never polluted with plumbing.
 
-## Credentials
+## The hook token (optional)
 
-The script resolves its connection in two layers; the first one that answers
-wins.
+Everything above the loss-point writes works with no credentials at all —
+instruction mode is the default. Add the hook token only for rich mode's
+zero-call injection and the `spec-memory.sh` lines. The script resolves it
+in two layers; the first one that answers wins.
 
 | Key | Meaning |
 | --- | --- |
@@ -221,10 +262,10 @@ wins.
    group- or world-readable the hook prints one warning naming the fix and
    continues.
 
-Neither layer present is **not an error** — it is the fresh-machine case, and
-the connection-status step answers it with setup guidance instead of a
-diagnostic. The `spec-setup` skill creates the credentials file skeleton for
-you; you paste the token in yourself, and the agent never sees it.
+Neither layer present is **not an error** — it is the default, and the
+session runs in instruction mode. The `spec-setup` skill creates the
+credentials file skeleton for you when you opt in; you paste the token in
+yourself, and the agent never sees it.
 
 ## What is in the pack
 
@@ -239,7 +280,9 @@ Everything lives in the skill's own directory,
 | `spec-workspace-context.sh` | The workspace-context step |
 | `spec-active-work.sh` | The recall step — open work, the active spec's memory tail, and the session identity coda |
 | `spec-memory.sh` | The write hook — records one memory line at `PreCompact` and `SessionEnd` |
-| `claude-code.settings.json` | The `SessionStart`, `PreCompact`, and `SessionEnd` entries to merge into `.claude/settings.json` |
+| `spec-context-watch.sh` | The checkpoint ladder — fires on `PostToolUse`, nudging the agent to save state as the window fills |
+| `spec-memory-summary.sh` | The post-compaction step — instructs the agent to write a real summary to spec memory |
+| `claude-code.settings.json` | The `SessionStart`, `PostToolUse`, `PreCompact`, and `SessionEnd` entries to merge into `.claude/settings.json` |
 | `codex.hooks.json` | The same shape for `~/.codex/hooks.json` |
 
 Requires `curl` and `python3` on `PATH`, and `git` to read the branch (no git,
@@ -261,21 +304,24 @@ printf '{"session_id":"install-check","source":"startup"}' \
   | sh .claude/skills/spec-setup/hooks/session-start.sh
 ```
 
-Connected, you get the status line and the workspace context on stdout. Not
-connected, you get the setup guidance. Anything broken, stdout stays empty and
+With a hook token, you get the status line and the workspace context on
+stdout. Without one, you get the orient instruction — instruction mode, the
+default, and proof the hook works. Anything broken, stdout stays empty and
 one stderr line names the cause. The exit code is always 0 — judge the hook by
 its output.
 
 ## Remove
 
-Delete the merged `SessionStart`, `PreCompact`, and `SessionEnd` entries from
+Delete the merged `SessionStart`, `PostToolUse`, `PreCompact`, and
+`SessionEnd` entries from
 `.claude/settings.json` (or `~/.codex/hooks.json`) and restart the harness. Nothing else is left behind:
 the hooks write no state, no cache, and no files outside a temp directory
 removed on exit. The skills keep working without them.
 
 ## Harness support, honestly
 
-The hooks run on **Claude Code** and **Codex CLI (0.124.0+)** today. Cursor
+The hooks run on **Claude Code** and **Codex CLI** (tested on 0.147.0) today.
+Cursor
 and Gemini CLI both have session-start hook systems, but each requires a
 single JSON object on stdout — Gemini treats plain text as a parse failure —
 and these hooks write plain text. Until that is wired, the hooks are not

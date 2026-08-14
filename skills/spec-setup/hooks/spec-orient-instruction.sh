@@ -52,10 +52,11 @@ Filesystem search is the fallback when Speqq does not answer, not the
 default.
 The active spec${soi_branch:+ (the one linked to branch "$soi_branch")} keeps a memory: the chronological story of
 the work, written for whoever opens it next. Maintain it as you go:
-- If the spec has no memory yet, open it with a Started entry naming the
-  goal before doing other work.
-- Append one entry (spec_memory_append, 2-4 sentences) after every commit,
-  proven result, decision, and change of direction: what you did, why, and
+- If the spec has no memory yet, open it with a Started entry naming what
+  the user asked for and the goal, before doing other work.
+- Append one entry (spec_memory_append, 2-4 sentences) every time the work
+  moves: when you create or restructure something, after every commit,
+  proven result, decision, and change of direction - what you did, why, and
   where things now stand. Lead with a past-tense verb - Started, Built,
   Committed <hash>, Proved, Decided, Dropped, Blocked, Paused, Done.
 - One entry per meaningful event, not per step; close with a Paused or

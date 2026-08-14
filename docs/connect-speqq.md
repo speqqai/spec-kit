@@ -18,12 +18,10 @@ Add `--scope user` to register it for every project instead of just the current 
 
 ### Codex CLI
 
-Add the server to `~/.codex/config.toml` (or a trusted project's `.codex/config.toml`):
+Register the server:
 
-```toml
-[mcp_servers.speqq]
-url = "https://speqq.com/mcp"
-auth = "oauth"
+```bash
+codex mcp add speqq --url https://speqq.com/mcp
 ```
 
 Then run `codex mcp login speqq` and finish the browser login. Streamable HTTP servers need Codex CLI 0.44.0 or newer; the pack is tested on 0.147.0. Confirm with `codex mcp list`, then start a new session and check the Speqq tools load.

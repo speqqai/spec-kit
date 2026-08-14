@@ -68,13 +68,10 @@ outside the harness's MCP client. Set up both.
    ```
 
    then the user runs `/mcp` in a session and authenticates — their browser
-   opens a Speqq login. For Codex CLI, add to `~/.codex/config.toml` (or a
-   trusted project's `.codex/config.toml`):
+   opens a Speqq login. For Codex CLI, register the server:
 
-   ```toml
-   [mcp_servers.speqq]
-   url = "https://speqq.com/mcp"
-   auth = "oauth"
+   ```bash
+   codex mcp add speqq --url https://speqq.com/mcp
    ```
 
    then the user runs `codex mcp login speqq`. Confirm with

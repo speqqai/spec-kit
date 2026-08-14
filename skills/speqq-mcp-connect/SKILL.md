@@ -32,14 +32,8 @@ Check what the harness has: `claude mcp list` (Claude Code) or
   The server ships with it; skip to rung 4, then rung 3 in the new session.
 - **Truly missing** - register it:
   - Claude Code: `claude mcp add --scope user --transport http speqq https://speqq.com/mcp`
-  - Codex: add to `~/.codex/config.toml` (edit it if the harness lets you,
-    otherwise print it for the user):
-
-    ```toml
-    [mcp_servers.speqq]
-    url = "https://speqq.com/mcp"
-    auth = "oauth"
-    ```
+  - Codex: `codex mcp add speqq --url https://speqq.com/mcp` - run it if the
+    harness allows, otherwise print it for the user.
 
   Then rung 3 for the first sign-in.
 

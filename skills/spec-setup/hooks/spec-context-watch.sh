@@ -36,7 +36,7 @@
 #     post-compaction firing so the next window climbs the ladder again.
 #   - Never blocks anything: every path exits 0.
 #
-# Env: SPEQQ_CONTEXT_NUDGE_PCT (comma list of rungs, default "20,40,60,80"),
+# Env: SPEQQ_CONTEXT_NUDGE_PCT (comma list of rungs, default "1,10,99"),
 # SPEQQ_CONTEXT_WINDOW (overrides everything; default is the transcript's
 # own window when it names one, else 200000), SPEQQ_HOOK_AGENT (attribution
 # name for the instruction). A fill that overshoots the assumed default
@@ -45,7 +45,7 @@
 
 set -u
 
-SM_NUDGE_PCT=${SPEQQ_CONTEXT_NUDGE_PCT:-20,40,60,80}
+SM_NUDGE_PCT=${SPEQQ_CONTEXT_NUDGE_PCT:-1,10,99}
 SM_WINDOW=${SPEQQ_CONTEXT_WINDOW:-}
 SM_AGENT=${SPEQQ_HOOK_AGENT:-claude-code}
 SM_BRANCH=$(git branch --show-current 2>/dev/null) || SM_BRANCH=''

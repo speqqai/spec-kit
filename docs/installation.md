@@ -4,7 +4,7 @@ Speqq Spec-Kit is a set of [Agent Skills](https://agentskills.io) (`SKILL.md`, t
 
 ## Install as a plugin — Claude Code and Codex
 
-One install delivers the skills, the session hooks, and the Speqq MCP registration.
+One install delivers the skills and the session hooks.
 
 **Claude Code:**
 
@@ -20,7 +20,7 @@ codex plugin marketplace add speqqai/spec-kit
 codex plugin add spec-kit@speqq
 ```
 
-Start a new session after installing. On Claude Code the hooks are active immediately; on Codex, review and approve them once with `/hooks` — Codex never auto-trusts plugin hooks. Then sign in: run `/mcp` in a Claude Code session, or `codex mcp login speqq` on Codex. Plugin skills are namespaced: `/spec-kit:spec-product` on Claude Code, `$spec-kit:spec-product` on Codex; plain-language requests trigger them the same as before.
+Start a new session after installing. On Claude Code the hooks are active immediately; on Codex, review and approve them once with `/hooks` — Codex never auto-trusts plugin hooks. Then connect Speqq — register the MCP server and sign in, per [Connect Speqq](connect-speqq.md). Plugin skills are namespaced: `/spec-kit:spec-product` on Claude Code, `$spec-kit:spec-product` on Codex; plain-language requests trigger them the same as before.
 
 ## Install as folders — any harness
 

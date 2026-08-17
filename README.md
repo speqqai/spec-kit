@@ -16,7 +16,7 @@ For engineers, the payoff is zero local state and a live dashboard. There is no 
 
 ### 1. Install the plugin
 
-One install delivers the skills, the session hooks, and the Speqq MCP registration. Claude Code:
+One install delivers the skills and the session hooks. Claude Code:
 
 ```bash
 claude plugin marketplace add speqqai/spec-kit
@@ -32,9 +32,19 @@ codex plugin add spec-kit@speqq
 
 Start a new session after installing; on Codex, approve the hooks once with `/hooks`. For Cursor, Gemini CLI, or a folders-only install, use `npx skills add speqqai/spec-kit` via [skills.sh](https://skills.sh) — see [docs/installation.md](docs/installation.md).
 
-### 2. Sign in to Speqq
+### 2. Connect Speqq
 
-Every skill reads and writes through the Speqq MCP server the plugin just registered — no token needed. Run `/mcp` in a Claude Code session, or `codex mcp login speqq` on Codex, and finish the browser login. The bearer-token alternative for service accounts is in [docs/connect-speqq.md](docs/connect-speqq.md).
+Every skill reads and writes through the Speqq MCP server — no token needed. Register it once:
+
+```bash
+claude mcp add --scope user --transport http speqq https://speqq.com/mcp
+```
+
+```bash
+codex mcp add speqq --url https://speqq.com/mcp
+```
+
+Then sign in: run `/mcp` in a Claude Code session, or `codex mcp login speqq` on Codex, and finish the browser login. The bearer-token alternative for service accounts is in [docs/connect-speqq.md](docs/connect-speqq.md).
 
 ### 3. Write your first spec
 

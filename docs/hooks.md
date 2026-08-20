@@ -1,282 +1,210 @@
 # Session hooks
 
-Spec-Kit ships an optional hook pack inside the `spec-setup` skill. When a
-coding session starts, the harness runs one script that opens a single
-connection to the Speqq MCP server and injects three things as session context —
-before you type anything:
+Spec-Kit ships an optional hook pack as part of the spec-kit plugin. The pack
+is four single-duty, tokenless, capacity-driven `PostToolUse` hooks plus a
+shared `lib.sh`. No hook opens an MCP connection, resolves credentials, or
+makes a network call. Each hook measures how full the local context window is,
+reading the figure from the session transcript, and at its rung prints one
+short instruction to stdout for the agent to act on over its own Speqq MCP
+connection.
 
-1. **Connection status** — one line confirming the session is wired up:
-
-   ```
-   Speqq connected - workspace Speqq (9f3c...) - session a1b2c3d4
-   ```
-
-   The trailing token is the first eight characters of the harness session id.
-   If no credentials are found anywhere, this step instead prints a short setup
-   block that tells the agent to walk you through connecting — so a fresh
-   machine's first session starts with the fix, not a silent gap.
-
-2. **Workspace context** — the workspace's PRODUCT.md, the product brief:
-   what the product is, who it is for, what must never break. The agent opens
-   the session already knowing what it is building, without being asked. A
-   workspace that has not written one gets a single line naming the gap, so
-   the agent can offer to create it.
-
-3. **Active work** — the recall half of the memory system (see
-   [spec-active-work](#spec-active-work--the-recall-step) below): the open
-   queue items, the active spec resolved from the current git branch, the tail
-   of that spec's MEMORY.md verbatim, and an identity coda naming which
-   session THIS is.
+There is no `SessionStart`, no `PreCompact`, and no `SessionEnd` hook, and
+there is no hook token. Everything runs on `PostToolUse`, and the shell only
+measures and speaks: the agent does the reading and the saving with its own
+MCP tools.
 
 The hooks are optional. Every `spec-*` skill makes the same calls itself when
-asked; the hooks make orientation automatic, which matters most in the sessions
-where nobody thinks to ask for it.
+asked. The hooks make orientation and checkpointing automatic, which matters
+most in the sessions where nobody thinks to ask for it.
+
+## The four hooks
+
+Each hook has one duty and fires at one point in the fill of the context
+window.
+
+1. **`read-product-context.sh` (orient).** Fires once per window while the
+   window is near empty (measured fill below `SPEQQ_CONTEXT_ORIENT_PCT`,
+   default 10). Injects one instruction: orient by reading the product brief.
+   Call `spec_orient`, then `spec_read` the `product_file` pointer it returns
+   (PRODUCT.md). It reads the product node only, and never mentions the open
+   or active work.
+
+2. **`read-memory.sh` (recall).** Fires once per window at the same near-empty
+   rung. Injects one instruction: resolve the active spec from the current git
+   branch with `spec_orient`, then `spec_memory_read` it to catch up on the
+   story of the work so far. The hook reads the branch locally and names it in
+   the instruction when it can.
+
+3. **`append-memory.sh` (checkpoint ladder).** The checkpoint ladder, minus
+   the near-empty rung the two read hooks own. Fires once each at the rungs in
+   `SPEQQ_CONTEXT_NUDGE_PCT` (default `25,50,75,95`) as the window fills.
+   Injects one instruction: find the queue item whose branch matches, take its
+   linked spec, and append 2 to 4 sentences on where the work stands with
+   `spec_memory_append`. The early rungs say "checkpoint." The top rung (95),
+   sitting just under auto-compaction, says "save now, while you still have
+   full context." The memory log ends up reading top to bottom as the story of
+   the session, written by the agent itself.
+
+4. **`prefer-knowledge-graph.sh` (knowledge-graph tip).** Fires once per
+   session on `PostToolUse` after a filesystem search: a `Grep` or `Glob` tool
+   call, or a `Bash` command that runs `grep`, `rg`, `ag`, or `find`. Injects one
+   recommendation: prefer `semantic_search_nodes`, `search_nodes`, or
+   `get_context` over filesystem grep and glob for understanding the codebase,
+   with grep and glob as the fallback when Speqq does not answer. Disable it
+   with `SPEQQ_READ_FIRST=0`.
 
 ## What fires them
 
-Both harnesses fire the same script on session start; the script reads the
-hook's stdin JSON (`session_id`, `source`) to tell the cases apart.
+All four hooks run on `PostToolUse`. Because nothing re-arms them at the start
+of a session, the pack detects a fresh window by capacity instead (see below),
+so the read hooks re-fire and the ladder re-climbs after every compaction.
 
-| Session event | Connection status | Workspace context | Active work | Summary instruction |
-| --- | --- | --- | --- | --- |
-| New session (`startup`) | printed | printed | printed | — |
-| Resumed session (`resume`) | printed | printed | printed | — |
-| Cleared session (`clear`) | printed | printed | printed | — |
-| After compaction (`compact`) | skipped | printed | printed | printed |
+The three capacity hooks (`read-product-context.sh`, `read-memory.sh`,
+`append-memory.sh`) run after every tool call and share the one measurement in
+`lib.sh`. The read hooks fire once each while the window is near empty. The
+ladder fires once at each filling rung. `prefer-knowledge-graph.sh` runs after
+a filesystem-search call (`Grep`, `Glob`, or a `Bash` `grep`/`find`) and fires
+once per session.
 
-The compact row is deliberate: a compaction squeezes the context window
-mid-session, so the orientation is re-injected — but the connection does not
-need re-announcing. And because the agent is the only writer that can say
-what the work *means*, the compact firing also injects a direct instruction:
-resolve the active spec from the current branch and append a 2-4 sentence
-summary — what it was doing, the current state, the next step — with
-`spec_memory_append`, then continue. The division of labor is strict: shell
-records facts, the agent records meaning, and the injection is the bridge
-that makes the second one happen without anyone asking.
+**Claude Code** wires this in `claude.plugin.hooks.json` as two `PostToolUse`
+entries: a `.*` matcher that runs the three capacity hooks (10-second harness
+timeout each), and a `Grep|Glob|Bash` matcher that runs the knowledge-graph tip
+(5-second timeout). **Codex CLI** takes the same shape in
+`codex.plugin.hooks.json`, adding a `statusMessage` per hook, loaded
+automatically with the plugin. The pack is tested on Codex 0.147.0. Codex
+trust-gates plugin hooks: review and enable each entry with `/hooks` in the
+TUI, and expect the same review after any change to an entry, because trust is
+keyed to the entry's content.
 
-**Claude Code** wires this as two `hooks.SessionStart` entries (matchers
-`startup|resume|clear` and `compact`) running
-`$CLAUDE_PROJECT_DIR/.claude/skills/spec-setup/hooks/session-start.sh` with a
-15-second harness timeout. **Codex CLI** (0.124.0 or newer — earlier builds
-have no hooks engine) takes the same shape in `~/.codex/hooks.json`; Codex
-trust-gates newly added hooks, so review and enable the entry with `/hooks` in
-the TUI. On some Codex builds a bare `codex` that silently restores the
-previous thread skips `SessionStart` entirely
-([openai/codex#24228](https://github.com/openai/codex/issues/24228)); starting
-a genuinely new session is the workaround.
+## How the hooks measure context
 
-## spec-memory
+The measurement lives once in `lib.sh` and is shared by the three capacity
+hooks. It is one Python pass over the tail of the session transcript that reads
+the last usage-bearing record. Two transcript shapes are recognized, each
+self-identifying so no harness flag decides the parse:
 
-The pack also ships one write hook, `spec-memory.sh`. Where the session-start
-script reads Speqq into the session, this one writes the session back — at the
-two moments its context is about to be lost:
+- **Claude Code JSONL.** The assistant record carries `message.usage`. The
+  fill is `input_tokens` plus `cache_creation_input_tokens` plus
+  `cache_read_input_tokens`.
+- **Codex rollouts.** An `event_msg` record with `payload.type` of
+  `token_count` carries `info.last_token_usage.input_tokens` (the last
+  request's prompt size) and `info.model_context_window` (the window itself).
+  These records land at each turn's end, so the ladder reads from the second
+  turn of a window on.
 
-| Event | When it fires | The recorded line ends up saying |
+The denominator is `SPEQQ_CONTEXT_WINDOW` when set, else the window the
+transcript names (Codex does, Claude does not), else 200000. A Claude
+transcript on a larger-window model can measure a fill above 100 percent of
+that default. Rather than guess a bigger window, the ladder parks itself for
+the window, prints one stderr line naming `SPEQQ_CONTEXT_WINDOW` as the fix,
+and stops re-firing.
+
+**Per-window rung flags.** Each hook records the rung it has fired in one flag
+file per session, in the state dir (`SPEQQ_HOOK_STATE_DIR`, else the system
+temp dir). The read hooks fire once. The ladder records the highest rung fired
+so each rung fires at most once, and a jump past two rungs nudges only for the
+highest.
+
+**Capacity-driven reset.** With no start-of-session hook to re-arm the ladder,
+capacity does it. `lib.sh` persists the last-seen fill per session id, and when
+the measured fill drops more than `SPEQQ_CONTEXT_RESET_DROP` points (default
+20) below the last-seen fill, a compaction or a fresh session reusing an id,
+it clears the per-window flags. The read hooks then fire again and the ladder
+re-climbs. This replaces the old session-start-driven reset.
+
+**Self-timeout.** Each measurement bounds itself with a `SIGALRM` alarm
+(`SPEQQ_HOOK_TIMEOUT_SECONDS`, default 5), so a pathological transcript can
+never hang a tool call.
+
+`lib.sh` requires `python3` on `PATH`. It is sourced by the three capacity
+hooks and never executed. `prefer-knowledge-graph.sh` does not source it: it
+runs its own small Python check and keeps its own once-per-session flag in the
+temp dir.
+
+## The invariants
+
+Every path through these hooks holds four rules. They are what make a hook safe
+to run around every tool call.
+
+1. **It never blocks a tool call.** Every path exits 0. A missing transcript,
+   an unparseable record, a timed-out measurement: the tool call proceeds, just
+   without the injected instruction.
+2. **Stdout is sacred.** Only the intentional context-injection JSON goes to
+   stdout, and only when a rung fires. A hook that does not fire prints
+   nothing.
+3. **Stderr is diagnostics.** A real runtime failure prints exactly one line to
+   stderr naming the cause, and still exits 0.
+4. **Tokenless.** No network, no credentials, no MCP, no curl. The hooks only
+   measure the local transcript and print instructions for the agent to act on
+   over its own MCP connection.
+
+## Environment
+
+Every variable is optional. The defaults are the tested configuration.
+
+| Key | Default | Meaning |
 | --- | --- | --- |
-| `PreCompact` (`manual\|auto`) | right before the context window is compacted | `compacting on <branch> - dirty: <n> files (<up to 3 names>)` |
-| `SessionEnd` | when the session ends | `session ended on <branch> - dirty: <n> files` |
+| `SPEQQ_CONTEXT_ORIENT_PCT` | `10` | Near-empty rung. Below this fill, the two read hooks fire once each. |
+| `SPEQQ_CONTEXT_NUDGE_PCT` | `25,50,75,95` | The ladder rungs, a comma list. Each fires once per window. |
+| `SPEQQ_CONTEXT_RESET_DROP` | `20` | Fill drop, in points below the last-seen fill, that counts as a new window and re-arms the flags. |
+| `SPEQQ_CONTEXT_WINDOW` | (unset) | Override the denominator, in tokens. Set it when a Claude model's real window is not 200000. |
+| `SPEQQ_HOOK_STATE_DIR` | system temp dir | Where the per-window flag files live. |
+| `SPEQQ_HOOK_TIMEOUT_SECONDS` | `5` | Self-timeout for each measurement. |
+| `SPEQQ_HOOK_AGENT` | `claude-code` | Attribution name written with each memory append. The Codex manifest sets it to `codex`. |
+| `SPEQQ_WORKSPACE_ID` | (unset) | Optional, non-secret. Sharpens the queue-lookup line in the checkpoint instruction. |
+| `SPEQQ_READ_FIRST` | `1` | Set to `0` to disable the knowledge-graph tip. |
 
-The hook appends that one line to the MEMORY.md of the **active spec** — the
-workspace queue item whose branch field exactly matches the current git
-branch, through its linked spec document. The server stamps the time and
-composes the full line; with the attribution the wiring supplies it reads:
-
-```
-2026-08-05 14:02  claude-code · a1b2c3d4 · compacting on feat/checkout - dirty: 3 files (a.ts, b.ts, c.md)
-```
-
-`claude-code` is the agent name the wiring passes as `SPEQQ_HOOK_AGENT`
-(`codex` in the Codex wiring), and `a1b2c3d4` is the first eight characters of
-the harness session id — the same short form the connection-status line
-prints, so a memory line can be traced back to the session that wrote it.
-Attribution travels as one unit: if either half is missing or malformed, the
-hook says so on stderr and records the line unattributed rather than losing
-it.
-
-Every miss is a skip, not a failure: no credentials, no current git branch,
-no queue item claiming the branch — one stderr line naming the cause, exit 0,
-nothing written and nothing guessed. And unlike the session-start script this
-hook injects nothing: **stdout stays empty on every path**. Recall after
-compaction is the SessionStart hooks' job — the `compact` matcher re-injects
-the workspace context, and the `spec-*` skills read MEMORY.md itself when
-asked. The write is best-effort under the same shared deadline as everything
-else: a slow server costs the memory line, never the compaction or the exit.
-
-The wiring adds a `PreCompact` entry (matcher `manual|auto`) and a
-`SessionEnd` entry to the same config files as the session-start hooks, each
-running `spec-memory.sh` with `SPEQQ_HOOK_AGENT` set in the command string.
-To verify by hand:
-
-```bash
-printf '{"session_id":"install-check","hook_event_name":"SessionEnd","reason":"other"}' \
-  | SPEQQ_HOOK_AGENT=claude-code sh .claude/skills/spec-setup/hooks/spec-memory.sh
-```
-
-Success is silent — the line lands in the spec's MEMORY.md and nothing is
-printed. Anything skipped or broken is one stderr line naming the cause;
-stdout is empty either way.
-
-## spec-active-work — the recall step
-
-Writing memory is only half a memory system; `spec-active-work.sh` is the
-half that reads it back. It runs as a session-start step on **every** source
-— `startup`, `resume`, `clear`, and `compact` — right after the workspace
-context, and injects three things:
-
-1. **Open work** — up to 8 queue items that are in progress or todo
-   (in-progress first), each as `title [status] - branch` when a branch is
-   linked. An empty queue is one honest line, and past 8 the note names
-   `queue_read` as the call that lists the rest.
-
-2. **The active spec's memory tail** — the queue item whose branch field
-   exactly matches the current git branch names the active spec through its
-   linked document; `spec_memory_read` returns the last 12 MEMORY.md
-   snippets and the step prints them verbatim, newest last. This is the
-   direct payoff of every line `spec-memory.sh` and the checkpoint ladder
-   wrote: the next session opens already knowing what happened. No current
-   branch, no queue item claiming it, no linked spec — one honest line
-   naming which, and the open-work listing still prints.
-
-3. **The identity coda** — whenever a session id is known:
-
-   ```
-   You are session a1b2c3d4 (claude-code). Memory lines carry the session that wrote them - lines from other sessions are earlier work; read them as a handoff, not your own memory.
-   ```
-
-   Memory lines are attributed (`agent · session8 ·`), so without this line
-   an agent has no way to tell its own earlier snippets from another
-   session's. With it, the log reads correctly as a handoff.
-
-The step holds the same invariants as its siblings, plus one of its own:
-each section is buffered and printed whole or not at all, so a failure
-mid-run (say `spec_memory_read` timing out) keeps every section already
-printed, adds one stderr line naming the cause, and never blocks the
-session. Its calls ride the same open MCP connection and the same shared
-deadline as every other step.
-
-## spec-context-watch — the checkpoint ladder
-
-The one thing a compaction hook can never do is put text in front of the
-model — so the pack gets ahead of compaction instead. `spec-context-watch.sh`
-runs on `PostToolUse` (every tool call), reads the session transcript's last
-assistant record for its `message.usage` token counts, and computes how full
-the context window is. As the window fills it nudges the live agent at three
-rungs — 30%, 60%, and 85% by default (`SPEQQ_CONTEXT_NUDGE_PCT` takes a
-comma list) — each time injecting one instruction the model reads on its
-next request: record where the work stands in spec memory — resolve the
-active spec from the branch, append 2-4 sentences of real state, then
-continue. The early rungs say "checkpoint"; the final rung, sitting under
-the auto-compaction threshold, says "save now, while you still have full
-context."
-
-The memory log ends up reading as a chronological story of the session,
-written by the agent itself — and the pre-compaction summary happens the
-only way the harness allows: the live agent, warned in time, writes it.
-Each rung fires once per window (a session-keyed flag records the highest
-rung fired); the post-compaction firing of the session-start dispatcher
-clears the flag, so the next window climbs the ladder again. Between rungs
-the hook is silent and costs a few milliseconds; no network, no
-credentials — it only measures and speaks, and the agent does the saving
-with its own MCP tools.
-
-## The four invariants
-
-Every path through both scripts holds four rules. They are what make a hook
-safe to run around every session:
-
-1. **It never blocks a session.** Every failure exits 0. Missing credentials,
-   an unreachable server, a rejected token — the session starts anyway, just
-   without the injected context.
-2. **It never fails silently.** Every failure prints exactly one line to
-   stderr naming the cause. No failure is ever guessed around: no invented
-   workspace, no defaulted server.
-3. **It never leaks the token.** The token lands only in a `0600` curl config
-   file inside a private temp directory removed on exit — never on a command
-   line where `ps` would show it, never on stdout, never in a diagnostic.
-4. **One shared deadline.** The whole run — every step, every request — is
-   bounded by 8 seconds of wall clock against a single deadline, not a budget
-   per request. `SPEQQ_HOOK_TIMEOUT_SECONDS` overrides it. Session start is
-   not the place to wait.
-
-And one discipline underneath them: stdout carries only the injected context
-itself. Everything else — status, warnings, causes — goes to stderr, so the
-agent's context is never polluted with plumbing.
-
-## Credentials
-
-The script resolves its connection in two layers; the first one that answers
-wins.
-
-| Key | Meaning |
-| --- | --- |
-| `SPEQQ_MCP_URL` | Full MCP endpoint, e.g. `https://speqq.com/mcp` |
-| `SPEQQ_MCP_TOKEN` | Your Speqq MCP token |
-| `SPEQQ_WORKSPACE_ID` | Optional — only needed when the token can see several workspaces |
-
-1. **Environment variables** with those names, when set.
-2. **`~/.speqq/credentials`** — a dotenv-style file carrying the same three
-   `KEY=value` lines (`SPEQQ_CREDENTIALS_FILE` overrides the path). The script
-   parses it line by line and never sources it, so the file cannot execute
-   anything. Keep it `chmod 600` inside a `chmod 700` directory; if it is
-   group- or world-readable the hook prints one warning naming the fix and
-   continues.
-
-Neither layer present is **not an error** — it is the fresh-machine case, and
-the connection-status step answers it with setup guidance instead of a
-diagnostic. The `spec-setup` skill creates the credentials file skeleton for
-you; you paste the token in yourself, and the agent never sees it.
+There is no token and no credentials file. The old rich-mode surface is gone:
+`SPEQQ_MCP_URL`, `SPEQQ_MCP_TOKEN`, and `~/.speqq/credentials` are removed and
+read nowhere. The hooks never authenticate, so there is nothing to configure to
+make them run.
 
 ## What is in the pack
 
-Everything lives in the skill's own directory,
-`skills/spec-setup/hooks/`:
+Everything lives in the pack's own directory, `hooks/`:
 
 | File | Role |
 | --- | --- |
-| `session-start.sh` | The read hook, fired at session start — parses the hook stdin, resolves credentials, opens one MCP session, runs the steps under the shared deadline |
-| `lib.sh` | Shared plumbing: credentials resolution, deadline, transport — sourced, never executed |
-| `speqq-setup.sh` | The connection-status step |
-| `spec-workspace-context.sh` | The workspace-context step |
-| `spec-active-work.sh` | The recall step — open work, the active spec's memory tail, and the session identity coda |
-| `spec-memory.sh` | The write hook — records one memory line at `PreCompact` and `SessionEnd` |
-| `claude-code.settings.json` | The `SessionStart`, `PreCompact`, and `SessionEnd` entries to merge into `.claude/settings.json` |
-| `codex.hooks.json` | The same shape for `~/.codex/hooks.json` |
+| `read-product-context.sh` | Orient. Near-empty rung, once per window. Injects the instruction to read the product brief. |
+| `read-memory.sh` | Recall. Near-empty rung, once per window. Injects the instruction to read the active spec's memory. |
+| `append-memory.sh` | The checkpoint ladder. Fires at each filling rung, once each per window. Injects the instruction to append a progress note to spec memory. |
+| `prefer-knowledge-graph.sh` | The knowledge-graph tip. Once per session after `Grep`/`Glob`. Injects the recommendation to prefer the Speqq knowledge graph over filesystem search. |
+| `lib.sh` | Shared plumbing: the context-fill measurement, the per-window rung flags, the capacity-driven reset, and the self-timeout. Sourced by the three capacity hooks, never by `prefer-knowledge-graph.sh`, and never executed. |
+| `claude.plugin.hooks.json` | The Claude Code plugin hook manifest: the two `PostToolUse` entries, loaded automatically with the plugin. |
+| `codex.plugin.hooks.json` | The same manifest shape for the Codex plugin. |
 
-Requires `curl` and `python3` on `PATH`, and `git` to read the branch (no git,
-no branch — the context is fetched without one, honestly).
+Requires `python3` on `PATH`, and `git` to read the branch (no git, no branch,
+and the instruction names the current branch generically instead).
 
 ## Install and verify
 
-The files are already on disk — `npx skills add speqqai/spec-kit` ships them
-inside the skill. Wiring them up is one merge, and the easiest way is to ask
-your agent to **"set up Speqq"**: the `spec-setup` skill merges the
-`SessionStart` entries into your harness config, makes `session-start.sh`
-executable, and verifies the result. Re-running it refreshes the entries; it
-never duplicates them.
+The hooks ship inside the spec-kit plugin and load automatically once the
+plugin is installed. There is no `settings.json` to merge and nothing to make
+executable by hand. See the Get started guide for installing the plugin.
 
-To verify by hand, run exactly what the harness runs:
+To verify a hook by hand, pipe a mock `PostToolUse` payload to it from the
+plugin's own directory. Point `transcript_path` at any real transcript file so
+the measurement has something to read:
 
 ```bash
-printf '{"session_id":"install-check","source":"startup"}' \
-  | sh .claude/skills/spec-setup/hooks/session-start.sh
+printf '{"session_id":"t","transcript_path":"<a transcript>","tool_name":"Read"}' \
+  | sh hooks/read-memory.sh
 ```
 
-Connected, you get the status line and the workspace context on stdout. Not
-connected, you get the setup guidance. Anything broken, stdout stays empty and
-one stderr line names the cause. The exit code is always 0 — judge the hook by
-its output.
+When the transcript's fill is below the near-empty rung, you get the injection
+JSON on stdout. When it is not, stdout stays empty, which is the hook working
+correctly. Anything broken prints one stderr line naming the cause. The exit
+code is always 0, so judge the hook by its output, not its status.
 
 ## Remove
 
-Delete the merged `SessionStart`, `PreCompact`, and `SessionEnd` entries from
-`.claude/settings.json` (or `~/.codex/hooks.json`) and restart the harness. Nothing else is left behind:
-the hooks write no state, no cache, and no files outside a temp directory
-removed on exit. The skills keep working without them.
+Uninstall the spec-kit plugin (or disable its hooks) and restart the harness.
+The only thing left behind is the small per-window flag files in the state dir,
+which are harmless and reused by session id. The skills keep working without
+the hooks.
 
-## Harness support, honestly
+## Harness support
 
-The hooks run on **Claude Code** and **Codex CLI (0.124.0+)** today. Cursor
-and Gemini CLI both have session-start hook systems, but each requires a
-single JSON object on stdout — Gemini treats plain text as a parse failure —
-and these hooks write plain text. Until that is wired, the hooks are not
-installed there. The skills themselves run on all four harnesses regardless.
+The hooks run on **Claude Code** and **Codex CLI** (tested on 0.147.0) today.
+Cursor and Gemini CLI are not supported: the hooks are Claude Code and Codex
+only. The skills themselves run on all four harnesses regardless.

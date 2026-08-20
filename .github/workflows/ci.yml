@@ -1,0 +1,18 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    name: Validate plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ShellCheck the session hooks
+        run: shellcheck --severity=error hooks/*.sh
+
+      - name: Validate manifests, versions, skills, and hooks
+        run: python3 scripts/validate.py

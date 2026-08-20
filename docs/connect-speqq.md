@@ -2,45 +2,68 @@
 
 Every Spec-Kit skill reads from and writes to a Speqq workspace over MCP. Nothing falls back to local files: each skill runs a preflight, and if the Speqq MCP tools are not available it stops and walks you through connecting. This page is the same setup, done once up front.
 
-Connecting takes two steps — create an MCP token in Speqq, then add the Speqq MCP server to your harness — plus a quick check that it worked.
+On Claude Code and Codex the spec-kit plugin registers the Speqq MCP server for you, so connecting is just signing in with your browser (OAuth). On a folders-only install, or on Cursor and Gemini CLI, you register the server yourself first, then sign in. A bearer token is the alternative — for service accounts, shared machines, and harnesses without an OAuth flow. The optional session-hook extras carry their own one-line credential, covered in [Session hooks](hooks.md).
 
-## 1. Create an MCP token
+The server is the same everywhere: **`https://speqq.com/mcp`** (streamable HTTP).
+
+## 1. Sign in with OAuth — no token
+
+### Claude Code
+
+The plugin already registered the `speqq` server. Start a session, run `/mcp`, and authenticate `speqq` — your browser opens a Speqq login. Confirm with `claude mcp list`.
+
+Installed the skills as folders instead of the plugin? Register the server first, then sign in as above:
+
+```bash
+claude mcp add --scope user --transport http speqq https://speqq.com/mcp
+```
+
+### Codex CLI
+
+The plugin already registered the `speqq` server. Run `codex mcp login speqq` and finish the browser login. Streamable HTTP servers need Codex CLI 0.44.0 or newer; the pack is tested on 0.147.0. Confirm with `codex mcp list`, then start a new session and check the Speqq tools load.
+
+Installed the skills as folders instead of the plugin? Register the server first:
+
+```bash
+codex mcp add speqq --url https://speqq.com/mcp
+```
+
+### Cursor and Gemini CLI
+
+These harnesses have no plugin, so register the Speqq server by hand: add it to the harness's MCP configuration file (project-level or global) with the URL above. Use the harness's OAuth flow when it offers one, or the bearer-token form below when it does not. See that harness's MCP documentation for the exact schema.
+
+## 2. Alternative: a bearer token
+
+For service accounts, shared machines, or a harness that cannot OAuth. Create the token first:
 
 1. In Speqq, open **Settings → MCP Tokens**.
 2. Create a new token.
-3. **Copy it immediately — it is shown once.** Treat it like a password: don't commit it, don't paste it into shared config.
+3. **Copy it immediately — it is shown once.** Treat it like a password: don't commit it, don't paste it into shared config or a conversation.
 
-The token scopes the connection to your Speqq account; the skills resolve the workspace at runtime (they call `list_workspaces` first and ask you which to use if you have several).
+The token scopes the connection to your Speqq account; the skills resolve the workspace at runtime (they call `list_workspaces` first and ask which to use if you have several).
 
-## 2. Add the Speqq MCP server to your harness
-
-You need two values everywhere:
-
-- **URL:** `https://speqq.com/mcp` (HTTP transport)
-- **Auth:** your token as an `Authorization: Bearer <token>` header
-
-The exact mechanics differ per harness.
-
-### Claude Code
+**Claude Code:**
 
 ```bash
 claude mcp add --transport http speqq https://speqq.com/mcp \
   --header "Authorization: Bearer <your-token>"
 ```
 
-Add `--scope user` to register it for every project instead of just the current one. Confirm with `claude mcp list`.
+**Codex CLI:**
 
-### Codex CLI
+```toml
+[mcp_servers.speqq]
+url = "https://speqq.com/mcp"
+bearer_token_env_var = "SPEQQ_MCP_TOKEN"
+```
 
-Add the Speqq server to Codex's configuration file (`config.toml` in your Codex home directory) as an MCP server entry with the URL and bearer token. See the Codex CLI MCP documentation for the exact entry format.
+Then export the token in your shell profile — Codex reads it from the environment at startup:
 
-### Cursor
+```bash
+export SPEQQ_MCP_TOKEN="<your-token>"
+```
 
-Add the Speqq server to Cursor's MCP configuration file (project-level or global `mcp.json`) with the URL and an authorization header carrying the bearer token. See Cursor's MCP documentation for the exact schema.
-
-### Gemini CLI
-
-Add the Speqq server under the MCP servers section of the Gemini CLI settings file, with the URL and bearer token. See the Gemini CLI MCP documentation for the exact entry format.
+Codex does not accept a literal bearer-token key in `config.toml`; the `bearer_token_env_var` indirection is the supported form, and it keeps the token out of the config file.
 
 After editing configuration, restart the harness session so the tools load.
 
@@ -56,8 +79,9 @@ Any of these confirms you're wired up:
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| Skill stops at preflight: "Speqq MCP is not connected" | Server not added to this harness, added under a different scope (project vs. global), or session started before the config change | Add the server for the harness you're using, then restart the session so tools load |
-| Speqq server listed but calls fail with an auth error | Token expired, revoked, or pasted incompletely | Create a new token in **Settings → MCP Tokens** and update your harness config with it — the old value cannot be re-copied |
+| Skill stops at preflight: "Speqq MCP is not connected" | The session started before the plugin installed, you have not signed in yet, or (folders-only install) the server was never registered | Sign in (`/mcp` or `codex mcp login speqq`) and start a new session; on a folders-only install, register the server first |
+| Server registered but tools still missing | The session predates the OAuth login, or the login was never completed | Finish the browser login (`/mcp` authenticate in Claude Code, `codex mcp login speqq` in Codex), then start a new session |
+| Speqq server listed but calls fail with an auth error | OAuth session expired, or a token was revoked or pasted incompletely | Re-run the browser login — or, on the token path, create a new token in **Settings → MCP Tokens** and update your harness config; the old value cannot be re-copied |
 | Specs or queue items land in (or read from) the wrong workspace | You have several workspaces and the wrong one was chosen | Skills call `list_workspaces` first and ask which to use when there's more than one — name the workspace explicitly when the skill asks, or tell the agent which workspace to use up front |
 | Speqq server not in the harness's MCP list at all | Config entry malformed (wrong key, wrong file, wrong scope) or the harness caches config | Re-check the entry against the harness's MCP docs, confirm the file location, restart the harness |
 | A spec you expect isn't found | The skill is looking in a different workspace, or the title doesn't match — spec discovery is `spec_list` filtered by title | Confirm the workspace, then give the skill the spec's title (specs use commit-form titles like `feat: user auth`) |

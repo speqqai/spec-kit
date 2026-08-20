@@ -2,7 +2,7 @@
 
 **Spec-driven development for coding agents — with every spec living in Speqq, not in loose markdown files.**
 
-Speqq Spec-Kit is a set of fifteen [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn Claude Code, Codex CLI, Cursor, or Gemini CLI into a spec-driven planner. It follows the lineage of GitHub's spec-kit with one fundamental difference: every artifact lands in a Speqq workspace over MCP — live collaboration, a real work queue, row-level execution status. No `specs/` directory. No state files. Zero local state.
+Speqq Spec-Kit is a set of [Agent Skills](https://agentskills.io) (`SKILL.md`, the open cross-agent standard) that turn Claude Code, Codex CLI, Cursor, or Gemini CLI into a spec-driven planner. It follows the lineage of GitHub's spec-kit with one fundamental difference: every artifact lands in a Speqq workspace over MCP — live collaboration, a real work queue, row-level execution status. No `specs/` directory. No state files. Zero local state.
 
 ## What spec-driven development in Speqq means
 
@@ -14,28 +14,32 @@ For engineers, the payoff is zero local state and a live dashboard. There is no 
 
 ## Get started
 
-### 1. Install the skills
+### 1. Install the plugin
+
+One install delivers the skills and the session hooks. Claude Code:
 
 ```bash
-npx skills add speqqai/spec-kit
+claude plugin marketplace add speqqai/spec-kit
+claude plugin install spec-kit@speqq
 ```
 
-One command via [skills.sh](https://skills.sh) — the CLI detects the harnesses you have set up and installs all fifteen skills into the ones you confirm.
+Codex CLI:
 
-### 2. Connect the Speqq MCP server
+```bash
+codex plugin marketplace add speqqai/spec-kit
+codex plugin add spec-kit@speqq
+```
 
-Every skill reads and writes through the Speqq MCP server. Each one checks the connection before doing anything and walks you through this setup if it is missing.
+Start a new session after installing; on Codex, approve the hooks once with `/hooks`. For Cursor, Gemini CLI, or a folders-only install, use `npx skills add speqqai/spec-kit` via [skills.sh](https://skills.sh) — see [docs/installation.md](docs/installation.md).
 
-1. In Speqq, open **Settings → MCP Tokens** and create a token. Copy it — it is shown once.
-2. Add the Speqq MCP server — `https://speqq.com/mcp`, authenticated with your token as a Bearer header. In Claude Code:
+### 2. Sign in to Speqq
 
-   ```bash
-   claude mcp add --transport http speqq https://speqq.com/mcp \
-     --header "Authorization: Bearer <your-token>"
-   ```
+The plugin registers the Speqq MCP server for you — no `mcp add` step and no token. Just sign in once and finish the browser login:
 
-   For Codex CLI, Cursor, and Gemini CLI, add the same URL and header to the harness's MCP config file — see [docs/connect-speqq.md](docs/connect-speqq.md).
-3. Restart the session so the Speqq tools load.
+- **Claude Code** — run `/mcp` and authenticate `speqq`.
+- **Codex** — run `codex mcp login speqq`.
+
+On Cursor, Gemini CLI, or a bearer-token setup for service accounts, register the server by hand — see [docs/connect-speqq.md](docs/connect-speqq.md).
 
 ### 3. Write your first spec
 
@@ -62,11 +66,13 @@ Ask your agent to spec a feature:
 
 | Skill | What it writes | When to use it |
 | --- | --- | --- |
-| `spec-setup` | The connection itself: the harness MCP registration, the `~/.speqq/credentials` skeleton (you paste the token in yourself — the agent never sees it), and the SessionStart hook entries | Connect Speqq for the first time; install or repair the session hooks |
+| `spec-setup` | The connection itself: the harness MCP registration (OAuth first — no token), the session hook entries, and — only if you want the token-fed extras — the `~/.speqq/credentials` skeleton you paste into yourself | Connect Speqq for the first time; install or repair the session hooks |
+| `spec-update` | The update itself: detects the install channel (plugin or folders), checks installed vs latest, runs the update, and names the reconcile steps — new session, `/hooks` re-trust on Codex when hooks changed | Update the kit, or check whether a newer version exists |
+| `speqq-mcp-connect` | A connection check ladder: tools reachable? → server registered? → signed in? — repairing each rung it can and handing the user the exact re-auth step it cannot run | The connection is lost, Speqq calls hit auth errors, or the MCP server was never set up |
 | `spec-init` | The spec shell, the matching queue item, the link between them, priority, and `in_progress` — one act, so none of it gets forgotten | Start something new and get it properly set up |
 | `spec-research` | Findings worth keeping, appended to the spec's memory as they are found | Get up to speed before specifying: what is true today, what is already decided, what is open |
 
-`spec-research` runs `spec-init` first when no spec exists — findings need a memory to land in. `spec-setup` also carries the session hooks: an optional SessionStart hook pack for Claude Code and Codex CLI that injects connection status and workspace orientation before you type anything — see [docs/hooks.md](docs/hooks.md).
+`spec-research` runs `spec-init` first when no spec exists — findings need a memory to land in. `spec-setup` also carries the session hooks: an optional hook pack for Claude Code and Codex CLI that injects connection status, workspace orientation, and your active work before you type anything — see [docs/hooks.md](docs/hooks.md).
 
 ## The four session skills
 
@@ -127,21 +133,20 @@ The result: resume work from any machine or session, nothing to merge or go stal
 
 ## Supported harnesses
 
-All four install with the same command. The MCP server is `https://speqq.com/mcp` everywhere; only the way you register it differs.
+The MCP server is `https://speqq.com/mcp` everywhere; how it gets registered depends on the harness.
 
-| Harness | Register the Speqq MCP server |
+| Harness | How Speqq MCP is set up |
 | --- | --- |
-| Claude Code | `claude mcp add --transport http speqq https://speqq.com/mcp --header "Authorization: Bearer <token>"` |
-| Codex CLI | MCP server entry in `config.toml` |
-| Cursor | MCP server entry in `mcp.json` (project or global) |
-| Gemini CLI | MCP server entry in the settings file |
+| Claude Code | Registered by the plugin — just sign in with `/mcp` |
+| Codex CLI | Registered by the plugin — just sign in with `codex mcp login speqq` |
+| Cursor | Register by hand: MCP server entry in `mcp.json` (project or global) |
+| Gemini CLI | Register by hand: MCP server entry in the settings file |
 
 ## Roadmap
 
 Planned, not yet shipped:
 
-- **Deeper hook packs** — enforced status sync, phase auto-commit, and a branch guard. Session context injection already ships: `spec-setup` carries SessionStart hooks for Claude Code and Codex CLI — see [docs/hooks.md](docs/hooks.md).
-- **One-install plugins** for Claude Code and Codex that bundle the skills and the Speqq MCP connection in a single install.
+- **Deeper hook packs** — enforced status sync, phase auto-commit, and a branch guard. Session context injection already ships: the plugin carries session hooks for Claude Code and Codex CLI — see [docs/hooks.md](docs/hooks.md).
 
 ## Documentation
 

@@ -1,0 +1,41 @@
+{
+  "description": "Plugin-bundled Codex hooks: four capacity-driven PostToolUse hooks that measure context fill from the transcript and inject one short instruction for the agent to act on over its OWN Speqq MCP connection - read the product brief (read-product-context) and the active spec's memory (read-memory) when the window is near-empty, append a progress note to memory as it fills (append-memory), and prefer the Speqq knowledge graph over filesystem search (prefer-knowledge-graph). Tokenless: no hook opens an MCP connection, resolves credentials, or makes a network call. Loaded automatically with the spec-kit plugin; Codex trust-gates plugin hooks - review with /hooks once after install and re-trust after any change. Tested on Codex 0.147.0.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex \"${PLUGIN_ROOT}/hooks/read-product-context.sh\"",
+            "statusMessage": "Speqq: read product brief",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex \"${PLUGIN_ROOT}/hooks/read-memory.sh\"",
+            "statusMessage": "Speqq: read spec memory",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex \"${PLUGIN_ROOT}/hooks/append-memory.sh\"",
+            "statusMessage": "Speqq checkpoint",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Grep|Glob|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=codex \"${PLUGIN_ROOT}/hooks/prefer-knowledge-graph.sh\"",
+            "statusMessage": "Speqq: prefer knowledge graph",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

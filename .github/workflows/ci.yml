@@ -14,5 +14,8 @@ jobs:
       - name: ShellCheck the session hooks
         run: shellcheck --severity=error hooks/*.sh
 
+      - name: Install validation dependencies
+        run: python3 -m pip install --quiet pyyaml
+
       - name: Validate manifests, versions, skills, and hooks
         run: python3 scripts/validate.py

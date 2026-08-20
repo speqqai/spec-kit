@@ -4,7 +4,9 @@
 Runs in CI and locally. Checks:
   - every bundled JSON file parses
   - VERSION matches both plugin manifests
-  - each skill has valid frontmatter, name == directory, a description, no em dash
+  - each skill's frontmatter parses as YAML (this is what catches a stray
+    unquoted ": " in a description, which silently drops the metadata at
+    runtime), with name == directory and a non-empty description, no em dash
   - the four PostToolUse hook scripts are executable
 Exits non-zero with a list of problems, or prints a success line.
 """
@@ -13,6 +15,16 @@ import os
 import re
 import sys
 from pathlib import Path
+
+try:
+    import yaml
+except ImportError:
+    print(
+        "PyYAML is required to validate skill frontmatter. Install it with "
+        "`python3 -m pip install pyyaml`.",
+        file=sys.stderr,
+    )
+    sys.exit(2)
 
 ROOT = Path(__file__).resolve().parent.parent
 errors: list[str] = []
@@ -64,7 +76,7 @@ try:
 except Exception as exc:  # noqa: BLE001
     errors.append(f"version check failed: {exc}")
 
-# 3. Skills.
+# 3. Skills: frontmatter must parse as YAML, name == dir, description present.
 skills_dir = ROOT / "skills"
 for skill in sorted(p for p in skills_dir.iterdir() if p.is_dir()):
     md = skill / "SKILL.md"
@@ -76,16 +88,18 @@ for skill in sorted(p for p in skills_dir.iterdir() if p.is_dir()):
     if not match:
         errors.append(f"{skill.name}: no frontmatter block")
         continue
-    frontmatter = match.group(1)
-    name_match = re.search(r"^name:\s*(.+)$", frontmatter, re.M)
-    if not name_match:
-        errors.append(f"{skill.name}: no name in frontmatter")
-    elif name_match.group(1).strip() != skill.name:
-        errors.append(
-            f"{skill.name}: name '{name_match.group(1).strip()}' does not match directory"
-        )
-    if not re.search(r"^description:\s*\S", frontmatter, re.M):
-        errors.append(f"{skill.name}: no description in frontmatter")
+    try:
+        meta = yaml.safe_load(match.group(1))
+    except yaml.YAMLError as exc:
+        errors.append(f"{skill.name}: frontmatter is not valid YAML ({exc})")
+        continue
+    if not isinstance(meta, dict):
+        errors.append(f"{skill.name}: frontmatter is not a YAML mapping")
+        continue
+    if meta.get("name") != skill.name:
+        errors.append(f"{skill.name}: name {meta.get('name')!r} does not match directory")
+    if not (meta.get("description") and str(meta["description"]).strip()):
+        errors.append(f"{skill.name}: missing or empty description")
     for lineno, line in enumerate(text.splitlines(), 1):
         if EM_DASH in line:
             errors.append(f"{skill.name}: em dash at SKILL.md line {lineno}")

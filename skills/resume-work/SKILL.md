@@ -1,6 +1,6 @@
 ---
 name: resume-work
-description: Pick work back up on a spec. Reads the spec's memory, its plan, and its row statuses, and reports where the work stopped, what was already tried and abandoned, and what comes next. Use when a user returns to a spec, resumes after a break, picks up someone else's branch, or asks what they were working on and what is left. Read-only: it writes nothing.
+description: Pick work back up on a spec. Reads the spec's memory, its plan, and its row statuses, and reports where the work stopped, what was already tried and abandoned, and what comes next. Use when a user returns to a spec, resumes after a break, picks up someone else's branch, or asks what they were working on and what is left. It is read-only and writes nothing.
 ---
 
 # Resume work

@@ -32,19 +32,14 @@ codex plugin add spec-kit@speqq
 
 Start a new session after installing; on Codex, approve the hooks once with `/hooks`. For Cursor, Gemini CLI, or a folders-only install, use `npx skills add speqqai/spec-kit` via [skills.sh](https://skills.sh) — see [docs/installation.md](docs/installation.md).
 
-### 2. Connect Speqq
+### 2. Sign in to Speqq
 
-Every skill reads and writes through the Speqq MCP server — no token needed. Register it once:
+The plugin registers the Speqq MCP server for you — no `mcp add` step and no token. Just sign in once and finish the browser login:
 
-```bash
-claude mcp add --scope user --transport http speqq https://speqq.com/mcp
-```
+- **Claude Code** — run `/mcp` and authenticate `speqq`.
+- **Codex** — run `codex mcp login speqq`.
 
-```bash
-codex mcp add speqq --url https://speqq.com/mcp
-```
-
-Then sign in: run `/mcp` in a Claude Code session, or `codex mcp login speqq` on Codex, and finish the browser login. The bearer-token alternative for service accounts is in [docs/connect-speqq.md](docs/connect-speqq.md).
+On Cursor, Gemini CLI, or a bearer-token setup for service accounts, register the server by hand — see [docs/connect-speqq.md](docs/connect-speqq.md).
 
 ### 3. Write your first spec
 
@@ -138,20 +133,20 @@ The result: resume work from any machine or session, nothing to merge or go stal
 
 ## Supported harnesses
 
-All four install with the same command. The MCP server is `https://speqq.com/mcp` everywhere; only the way you register it differs.
+The MCP server is `https://speqq.com/mcp` everywhere; how it gets registered depends on the harness.
 
-| Harness | Register the Speqq MCP server |
+| Harness | How Speqq MCP is set up |
 | --- | --- |
-| Claude Code | `claude mcp add --transport http speqq https://speqq.com/mcp --header "Authorization: Bearer <token>"` |
-| Codex CLI | MCP server entry in `config.toml` |
-| Cursor | MCP server entry in `mcp.json` (project or global) |
-| Gemini CLI | MCP server entry in the settings file |
+| Claude Code | Registered by the plugin — just sign in with `/mcp` |
+| Codex CLI | Registered by the plugin — just sign in with `codex mcp login speqq` |
+| Cursor | Register by hand: MCP server entry in `mcp.json` (project or global) |
+| Gemini CLI | Register by hand: MCP server entry in the settings file |
 
 ## Roadmap
 
 Planned, not yet shipped:
 
-- **Deeper hook packs** — enforced status sync, phase auto-commit, and a branch guard. Session context injection already ships: `spec-setup` carries session hooks for Claude Code and Codex CLI — see [docs/hooks.md](docs/hooks.md).
+- **Deeper hook packs** — enforced status sync, phase auto-commit, and a branch guard. Session context injection already ships: the plugin carries session hooks for Claude Code and Codex CLI — see [docs/hooks.md](docs/hooks.md).
 
 ## Documentation
 

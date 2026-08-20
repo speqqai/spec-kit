@@ -1,0 +1,36 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=claude-code \"${CLAUDE_PLUGIN_ROOT}/hooks/read-product-context.sh\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=claude-code \"${CLAUDE_PLUGIN_ROOT}/hooks/read-memory.sh\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=claude-code \"${CLAUDE_PLUGIN_ROOT}/hooks/append-memory.sh\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Grep|Glob|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SPEQQ_HOOK_AGENT=claude-code \"${CLAUDE_PLUGIN_ROOT}/hooks/prefer-knowledge-graph.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

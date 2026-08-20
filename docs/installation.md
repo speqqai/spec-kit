@@ -20,7 +20,7 @@ codex plugin marketplace add speqqai/spec-kit
 codex plugin add spec-kit@speqq
 ```
 
-Start a new session after installing. On Claude Code the hooks are active immediately; on Codex, review and approve them once with `/hooks` — Codex never auto-trusts plugin hooks. Then connect Speqq — register the MCP server and sign in, per [Connect Speqq](connect-speqq.md). Plugin skills are namespaced: `/spec-kit:spec-product` on Claude Code, `$spec-kit:spec-product` on Codex; plain-language requests trigger them the same as before.
+Start a new session after installing. On Claude Code the hooks are active immediately; on Codex, review and approve them once with `/hooks` — Codex never auto-trusts plugin hooks. The plugin also registers the Speqq MCP server, so there is no `mcp add` step — just sign in (`/mcp` on Claude Code, `codex mcp login speqq` on Codex), per [Connect Speqq](connect-speqq.md). Plugin skills are namespaced: `/spec-kit:write-spec` on Claude Code, `$spec-kit:write-spec` on Codex; plain-language requests trigger them the same as before.
 
 ## Install as folders — any harness
 
@@ -82,7 +82,7 @@ If a harness does not appear in that output, check that harness's documentation 
 
 ## After installing: connect Speqq
 
-The skills store everything in a Speqq workspace over MCP — there is no `specs/` directory and no local state. Every skill runs a preflight and stops with connection instructions if the Speqq MCP server is not available. Set it up once: ask the agent to **"set up Speqq"** and the `spec-setup` skill runs the walkthrough — and can wire up the session hooks in the same pass — or follow [Connect Speqq](connect-speqq.md) by hand.
+The skills store everything in a Speqq workspace over MCP — there is no `specs/` directory and no local state. Every skill runs a preflight and stops with connection instructions if the Speqq MCP server is not available. On Claude Code and Codex the plugin registers the server, so setup is just signing in — see [Connect Speqq](connect-speqq.md). On a folders-only install (Cursor, Gemini CLI, or `npx skills add`), register the server by hand from the same page.
 
 ## Updating
 

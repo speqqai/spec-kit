@@ -1,6 +1,6 @@
 ---
 name: write-spec
-description: Write a feature spec in Speqq: the Overview, the Requirements, and the tests, with UX mockups attached. Write each requirement as a parent row and its implementation plan as child build steps under it, so the Requirements table is the single ledger. Use it when a user wants to spec a feature, write requirements, plan the build steps, add a test plan, or turn a scoped idea into a spec.
+description: Write a feature spec in Speqq, covering the Overview, the Requirements, and the tests, with UX mockups attached. Write each requirement as a parent row and its implementation plan as child build steps under it, so the Requirements table is the single ledger. Use it when a user wants to spec a feature, write requirements, plan the build steps, add a test plan, or turn a scoped idea into a spec.
 ---
 
 # Write a spec

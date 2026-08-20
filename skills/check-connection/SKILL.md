@@ -1,6 +1,6 @@
 ---
 name: check-connection
-description: Check the Speqq MCP connection and repair it: register the server when it's missing, walk the user through re-authentication when the sign-in has expired, and say exactly when a new session is needed. Use when Speqq tools are missing or erroring, on auth, 401, or unauthorized errors from Speqq calls, or when a user says the connection is lost, or asks to connect, reconnect, re-authenticate, sign in again, or install or set up the Speqq MCP server. Connection only; hooks and the rest of machine setup come with the Spec-Kit plugin.
+description: Check the Speqq MCP connection and repair it by registering the server when it's missing, walking the user through re-authentication when the sign-in has expired, and saying exactly when a new session is needed. Use when Speqq tools are missing or erroring, on auth, 401, or unauthorized errors from Speqq calls, or when a user says the connection is lost, or asks to connect, reconnect, re-authenticate, sign in again, or install or set up the Speqq MCP server. Connection only; hooks and the rest of machine setup come with the Spec-Kit plugin.
 ---
 
 # Check connection

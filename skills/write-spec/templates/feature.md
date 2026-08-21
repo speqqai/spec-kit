@@ -1,16 +1,20 @@
 # Feature spec template
 
-A feature spec has up to four parts. Write only what the work needs. Default to the Overview. Follow `../references/style-guide.md` for the writing.
+A feature spec frames the problem before the solution, then lists the requirements and the tests. Cover the sections the work needs: a real feature covers them all, a trivial change may fold or skip the product-framing parts and say which. Write each part lean, a few tight sentences or a table, not walls. Rationale and dead ends go to the spec's memory, not here. Follow `../references/style-guide.md` for the writing.
 
-## Overview (page tab, always)
+## Overview (page tab)
 
-Lead with what the feature does and who it is for, in one or two sentences. Then add only the parts the work needs:
+Write these parts in order. Each is short.
 
-- **System design.** The components and how they connect. Add a `mermaid` diagram if it clarifies the flow.
-- **Technical design.** The data model, the contracts, the failure modes. Named and specific.
-- **Architecture.** Where this fits in the wider system.
-
-Keep it scannable. Lead each part with its conclusion. Background and rationale go to the spec's memory, not here.
+1. **Objective.** The outcome this delivers, in one line. The what and the why, not the how.
+2. **User.** Who it is for, the role or persona. Name them.
+3. **Goal and problem.** What the user is trying to do, and the problem they hit today.
+4. **Interfaces.** Where this lives, the surfaces it touches: the screens, the API, the CLI.
+5. **Core user journeys.** The key flows start to finish, as short numbered steps. Cover the main path and the edges that matter.
+6. **Industry standard and best practices.** How the category solves this well, the product, UX, and technical patterns that set the bar. This is the target unless there is a reason to differ.
+7. **Current state.** What the product does today for this. Be honest: not supported, or supported but a poor experience, and why. This is the delta the feature closes.
+8. **Architecture.** How the feature fits the system: the components, the data model, the contracts, the failure modes. Add a `mermaid` diagram when it clarifies the flow.
+9. **Solution and options.** The approach you will build, and the main options considered. Default to the industry-standard pattern from part 6 unless the user wants different; when you diverge, say why in one line.
 
 ## Requirements (table tab, and the single build ledger)
 

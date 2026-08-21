@@ -1,6 +1,6 @@
 # Feature spec template
 
-A feature spec frames the problem before the solution, then lists the requirements and the tests. Cover the sections the work needs: a real feature covers them all, a trivial change may fold or skip the product-framing parts and say which. Write each part lean, a few tight sentences or a table, not walls. Rationale and dead ends go to the spec's memory, not here. Follow `../references/style-guide.md` for the writing.
+A feature spec frames the problem before the solution, then says what the feature does and how you will prove it. Cover the parts the work needs: a real feature covers them all, a trivial change can fold or skip the product-framing parts and say which. Keep every part to a few plain sentences or a short list, not walls. Follow `../references/style-guide.md` for the writing.
 
 ## Overview (page tab)
 
@@ -10,27 +10,19 @@ Write these parts in order. Each is short.
 2. **User.** Who it is for, the role or persona. Name them.
 3. **Goal and problem.** What the user is trying to do, and the problem they hit today.
 4. **Interfaces.** Where this lives, the surfaces it touches: the screens, the API, the CLI.
-5. **Core user journeys.** The key flows start to finish, as short numbered steps. Cover the main path and the edges that matter.
-6. **Industry standard and best practices.** How the category solves this well, the product, UX, and technical patterns that set the bar. This is the target unless there is a reason to differ.
-7. **Current state.** What the product does today for this. Be honest: not supported, or supported but a poor experience, and why. This is the delta the feature closes.
+5. **Core user journeys.** The key flows start to finish, as short numbered steps. The main path and the edges that matter.
+6. **Industry standard.** How the category solves this well, the pattern that sets the bar. This is the target unless there is a reason to differ.
+7. **Current state.** What the product does today for this. Not supported, or supported but a poor experience, and why. This is the delta the feature closes.
 8. **Architecture.** How the feature fits the system: the components, the data model, the contracts, the failure modes. Add a `mermaid` diagram when it clarifies the flow.
-9. **Solution and options.** The approach you will build, and the main options considered. Default to the industry-standard pattern from part 6 unless the user wants different; when you diverge, say why in one line.
+9. **Solution.** The approach you will build, and the main options you weighed. Default to the industry standard from part 6 unless the user wants different; when you diverge, say why in one line.
 
-## Requirements (table tab, and the single build ledger)
+## Requirements (table tab)
 
-One parent row per requirement, written in EARS. One condition, one response, one line.
-
-- Event: When [trigger], the [system] shall [response].
-- Unwanted: If [trigger], then the [system] shall [response].
-- State: While [precondition], the [system] shall [response].
-
-Cover the main event and the edges that matter: invalid input, permission denied, empty, and error. One row each. Set `priority` (high, medium, low). Each row's title is the requirement; put limits and scope in the description.
-
-Each requirement is a parent row; its implementation steps are child rows beneath it. The requirement is the story, the child steps are the sub-tasks that build it. Each child step names, concisely, what changes, the surfaces it touches, what it depends on, and how you know it is done (Changes / Surfaces / Depends on / Done when). This table is the single ledger: there is no separate implementation plan tab.
+Keep them loose and usable, not a long document. One row per requirement. Each requirement says how the feature is built, what it can do, what it cannot do, and its guardrails. Set `priority` (high, medium, low). Cover the main behavior and the limits that matter; save exhaustive edge cases for when the build proves you need them.
 
 ## Testing (table tab, when the feature needs verification)
 
-One row per test, traced to a requirement by its title. Label each automated or manual against what the repo can actually run.
+One row per test, named to match the requirement it checks. Mark each automated or manual against what the repo can actually run. This is the plan for proving the feature, not the test code.
 
 ## Design (sidebar attachments, for UI features)
 

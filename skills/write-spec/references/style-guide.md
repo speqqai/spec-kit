@@ -9,7 +9,7 @@ How to write spec content so a user can scan it while it stays precise for an ag
 - Active voice, present tense. Name the actor: "The service retries," not "Retries are performed."
 - Start each sentence and bullet with a verb or the key noun. Front-load the load-bearing word.
 - Every adjective or claim carries a number, or gets cut. No "fast," "scalable," or "robust" without a figure.
-- Tables for parallel data (states, options, fields, error and behavior). Numbered lists for sequences. Prose only for reasoning and tradeoffs.
+- Tables for parallel data (states, options, fields, errors and behaviors). Numbered lists for sequences. Prose only for reasoning and tradeoffs.
 - Write requirements in EARS. One line, "shall," one condition and one response.
 - Depth comes from specific nouns, numbers, and named edge cases, not from more words. Cut any sentence that fails the "so what?" test.
 

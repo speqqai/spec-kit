@@ -11,8 +11,8 @@ Lead with the failure. Then add these parts:
 - **Fix.** What changes, in one or two sentences, and the surfaces it touches.
 - **Validation.** How you know it is fixed. A test or an observable check.
 
-Keep it to what is proven. Investigation notes and dead ends go to the spec's memory, not here.
+Keep it to what is proven.
 
 ## Requirements (table tab, only if the fix adds behavior)
 
-A pure fix needs no requirements. If the fix introduces new behavior, add it in EARS, one row each.
+A pure fix needs no requirements. If the fix introduces new behavior, add it loose: one row that says what the new behavior does, what it does not, and its guardrails.

@@ -2,7 +2,7 @@
   "mcpServers": {
     "speqq": {
       "type": "http",
-      "url": "https://speqq.com/mcp"
+      "url": "https://speqq.com/mcp/specs"
     }
   }
 }

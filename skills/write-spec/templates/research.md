@@ -2,7 +2,7 @@
 
 A research spec answers a question. It says what you need to know, how you will find out, and what you learned. It is a living document: write the question and approach before the work, the findings and recommendation after. Keep every part to a few plain sentences. Follow `../references/style-guide.md` for the writing.
 
-## Overview (page tab)
+## Page
 
 Write the first parts before the work, the last parts after.
 

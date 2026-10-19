@@ -41,25 +41,7 @@ Installs are project-level by default. Useful flags:
 
 ## What gets installed
 
-| Skill | What it does |
-| --- | --- |
-| `spec-product` | Creates the feature spec — Overview + testable Requirements with Given/When/Then acceptance criteria (no user stories) |
-| `spec-ux` | Adds the Design tab — screens, four data states, flows, grounded in your repo's real design system |
-| `spec-eng` | Adds System design + Implementation plan tabs (mermaid renders natively in Speqq) |
-| `spec-qa` | Adds the Test plan tab — requirement-traceable TC cases with honest automated/manual labels |
-| `spec-fix` | Writes bug specs — Overview / Root cause / Fix / Validation |
-| `spec-implement` | Executes the Implementation plan, branch-per-feature, flips row statuses live |
-| `spec-converge` | Reconciles code against the spec; appends drift as new plan steps |
-| `spec-queue` | Files plan steps into the Speqq queue with dedup and priority |
-| `spec-init` | Creates the spec shell, queue item, link, priority and in-progress status |
-| `spec-research` | Reads what exists today and records the findings worth keeping |
-| `spec-setup` | Connects Speqq — walks you through the MCP token and server registration, creates the credentials skeleton, and wires up the session hooks |
-| `spec-update` | Updates an installed kit — plugin or folders — and reconciles the hooks after |
-| `speqq-mcp-connect` | Checks the Speqq MCP connection and repairs it — registers a missing server, walks through re-authentication, says when a new session is needed |
-| `spec-start` | Opens a session on a spec and records what the run is going after |
-| `spec-pause` | Closes a session: where the work stands, and honest row statuses |
-| `spec-snippet` | Appends one line to a spec's memory, on demand |
-| `spec-resume` | Reads a spec's memory and reports where it stopped |
+The plugin installs the skills listed in [README](../README.md): scoping, writing, reviewing, queueing, implementation, drift checks, code review, connection repair, and session memory. It registers the Specs MCP at `https://speqq.com/mcp/specs` and the tokenless session hooks described in [hooks](hooks.md).
 
 ## Where skills land, per harness
 

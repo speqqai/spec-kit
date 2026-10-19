@@ -7,6 +7,8 @@ description: Write a spec in Speqq for any kind of work, a feature, a bug, an A/
 
 A spec frames the work before you build it, and stays the record of it afterward. This is one flow for four kinds of work: a feature, a bug, an A/B test, or research. You confirm the type first, and the template for that type drives what you write. Keep every part lean, and keep it to the output: what the work is and does.
 
+Every new spec already has one Page and one Table. `spec_create` returns both tab IDs; write narrative sections into that Page with `spec_markdown_tab_update` or `spec_markdown_tab_append`, and requirements or work rows into that Table. Do not create, rename, or delete tabs. When a separate body of work needs its own Page and Table, create a child spec with `spec_create(parent_id=...)`.
+
 ## Prerequisites
 
 Confirm each of these before you write. If one is missing, set it up first.

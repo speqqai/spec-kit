@@ -2,8 +2,8 @@
 # prefer-knowledge-graph.sh (renamed from spec-read-first.sh) - a
 # recommendation-only nudge toward the Speqq knowledge graph. Runs on
 # PostToolUse after a filesystem-search tool call and injects ONE
-# recommendation per session to try semantic_search_nodes / search_nodes /
-# get_context before more filesystem grep/glob. Recommendation only and
+# recommendation per session to try get_context / search before more
+# filesystem grep/glob. Recommendation only and
 # tokenless: it opens no MCP connection and makes no network call. It never
 # blocks anything - exit 0 with no output is the common path. Disable with
 # SPEQQ_READ_FIRST=0.
@@ -52,6 +52,6 @@ flag="${SPEQQ_HOOK_STATE_DIR:-${TMPDIR:-/tmp}}/speqq-prefer-kg-${session:-any}"
 : > "$flag" 2>/dev/null || exit 0
 
 cat <<'ENVELOPE'
-{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"Recommendation: this workspace has a Speqq knowledge graph - for understanding the codebase, try semantic_search_nodes, search_nodes, or get_context over the Speqq MCP connection before more filesystem grep or glob. Grep and glob remain the fallback when Speqq does not answer. This tip appears once per session."}}
+{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"Recommendation: for product and codebase context, try Speqq get_context or search over your MCP connection before more filesystem search. Continue with repository tools when those MCP tools are unavailable. This tip appears once per session."}}
 ENVELOPE
 exit 0

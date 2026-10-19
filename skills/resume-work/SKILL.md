@@ -7,6 +7,8 @@ description: Pick work back up on a spec. Reads the spec's memory, its plan, and
 
 Answer one question: where did this stop, and what do I do next? The spec's memory is the answer, and the reason it exists; a resumed session that reads only the plan and the commits will happily redo an approach a previous session already proved wrong.
 
+If `.speqq` at the repository root names `memory: @handle`, first call Knowledge MCP `memory_read` with the workspace ID and the handle without `@` for the team's shared summary and durable entries. Then read the active spec's memory for the work-specific timeline. Use `memory_search` if the shared memory points to older details outside the newest entries.
+
 ## Prerequisites
 
 - Speqq MCP must be connected. If a Speqq call fails with a connection or authentication error, run `check-connection` first.
@@ -16,8 +18,8 @@ Answer one question: where did this stop, and what do I do next? The spec's memo
 
 1. **Resolve the workspace and spec.** Call `list_workspaces`, then resolve in order: a queue item the user picked, a spec the user named, or the current git branch via `spec_orient`. Say which rung answered. A branch match is a strong signal; a fallback is a guess the user may want to correct.
 2. **Read the memory first.** `spec_memory_read` the spec, before the plan. The most recent lines are where the work stopped, and a pause note near the end usually states the state outright. A spec with nothing recorded is a spec nobody has worked: say so, and treat it as a start rather than a resume.
-3. **Then read the plan and the ledger.** `spec_read` the Implementation plan and the Requirements rows with their statuses. Read the memory against them: the rows say what is done, the memory says what was tried.
-4. **Read what you are building, if you need it.** `spec_orient` returns a `product_file` pointer to the product brief, worth reading when the next step involves a judgement call rather than a mechanical change.
+3. **Then read the plan and the ledger.** `spec_read` the Page and Table, including requirement rows and child build steps with their statuses. Read the memory against them: the rows say what is done, the memory says what was tried.
+4. **Read product context if needed.** Call `get_context` when available for product grounding. Do not expect a `product_file` pointer from `spec_orient`.
 5. **Report, leading with the state.** What the spec is for, where it stopped, what was tried and abandoned with reasons, what is open, and what you intend to do next. Then stop and let the user confirm. Resuming into the wrong next step is the failure this skill exists to prevent.
 
 ## FYI

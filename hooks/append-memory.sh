@@ -30,9 +30,20 @@ SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd) || exit 0
 [ -f "$SCRIPT_DIR/lib.sh" ] || exit 0
 # shellcheck source=lib.sh
 . "$SCRIPT_DIR/lib.sh"
+[ -f "$SCRIPT_DIR/memory-lib.sh" ] || exit 0
+# shellcheck source=memory-lib.sh
+. "$SCRIPT_DIR/memory-lib.sh"
 
 AM_RUNGS=${SPEQQ_CONTEXT_NUDGE_PCT:-25,50,75,95}
 AM_AGENT=${SPEQQ_HOOK_AGENT:-claude-code}
+AM_SHARED_HANDLE=$(speqq_memory_handle) || exit 0
+if [ -n "$AM_SHARED_HANDLE" ]; then
+  AM_BODY="call list_workspaces, then use the Speqq Knowledge MCP memory_write with that workspace_id, handle \"$AM_SHARED_HANDLE\" (without @), agent \"$AM_AGENT\", session_id \"{session}\", and a concise account of what happened, why, what remains, and the next step. Add refs for known item keys or URLs. If the Knowledge MCP is unavailable, report that and continue the task."
+  AM_TEMPLATE="Checkpoint: your context window is {pct}% full. For shared memory @$AM_SHARED_HANDLE, use kind \"progress\" so this replaces your previous progress entry; $AM_BODY"
+  AM_TEMPLATE_FINAL="Your context window is {pct}% full and will be auto-compacted soon. Save a durable handoff to @$AM_SHARED_HANDLE now with kind \"handoff\"; $AM_BODY"
+  speqq_run ladder append-ladder "$AM_RUNGS" "$AM_TEMPLATE" "$AM_TEMPLATE_FINAL"
+  exit 0
+fi
 
 AM_BRANCH=$(git branch --show-current 2>/dev/null) || AM_BRANCH=''
 if [ -n "$AM_BRANCH" ]; then

@@ -4,28 +4,30 @@ Every Spec-Kit skill reads from and writes to a Speqq workspace over MCP. Nothin
 
 On Claude Code and Codex the spec-kit plugin registers the Speqq MCP server for you, so connecting is just signing in with your browser (OAuth). On a folders-only install, or on Cursor and Gemini CLI, you register the server yourself first, then sign in. A bearer token is the alternative — for service accounts, shared machines, and harnesses without an OAuth flow. The optional session-hook extras carry their own one-line credential, covered in [Session hooks](hooks.md).
 
-The server is the same everywhere: **`https://speqq.com/mcp/specs`** (streamable HTTP).
+The Specs server is **`https://speqq.com/mcp/specs`**. Shared memory uses **`https://speqq.com/mcp/knowledge`**. Both use streamable HTTP.
 
 ## 1. Sign in with OAuth — no token
 
 ### Claude Code
 
-The plugin already registered the `speqq` server. Start a session, run `/mcp`, and authenticate `speqq` — your browser opens a Speqq login. Confirm with `claude mcp list`.
+The plugin already registered `speqq` and `speqq-knowledge`. Start a session, run `/mcp`, and authenticate each connection that asks for sign-in. Confirm with `claude mcp list`.
 
 Installed the skills as folders instead of the plugin? Register the server first, then sign in as above:
 
 ```bash
 claude mcp add --scope user --transport http speqq https://speqq.com/mcp/specs
+claude mcp add --scope user --transport http speqq-knowledge https://speqq.com/mcp/knowledge
 ```
 
 ### Codex CLI
 
-The plugin already registered the `speqq` server. Run `codex mcp login speqq` and finish the browser login. Streamable HTTP servers need Codex CLI 0.44.0 or newer; the pack is tested on 0.147.0. Confirm with `codex mcp list`, then start a new session and check the Speqq tools load.
+The plugin already registered `speqq` and `speqq-knowledge`. Run `codex mcp login speqq` and `codex mcp login speqq-knowledge`, finishing each browser login. Streamable HTTP servers need Codex CLI 0.44.0 or newer; the pack is tested on 0.147.0. Confirm with `codex mcp list`, then start a new session and check the Speqq tools load.
 
 Installed the skills as folders instead of the plugin? Register the server first:
 
 ```bash
 codex mcp add speqq --url https://speqq.com/mcp/specs
+codex mcp add speqq-knowledge --url https://speqq.com/mcp/knowledge
 ```
 
 ### Cursor and Gemini CLI

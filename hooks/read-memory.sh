@@ -18,8 +18,18 @@ SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd) || exit 0
 [ -f "$SCRIPT_DIR/lib.sh" ] || exit 0
 # shellcheck source=lib.sh
 . "$SCRIPT_DIR/lib.sh"
+[ -f "$SCRIPT_DIR/memory-lib.sh" ] || exit 0
+# shellcheck source=memory-lib.sh
+. "$SCRIPT_DIR/memory-lib.sh"
 
 RM_ORIENT_PCT=${SPEQQ_CONTEXT_ORIENT_PCT:-10}
+RM_SHARED_HANDLE=$(speqq_memory_handle) || exit 0
+if [ -n "$RM_SHARED_HANDLE" ]; then
+  RM_TEMPLATE="Catch up before you continue: call list_workspaces, then use the Speqq Knowledge MCP memory_read with that workspace_id and handle \"$RM_SHARED_HANDLE\" (without @). Read its summary and newest durable entries; use memory_search for older details. If the Knowledge MCP is unavailable, report that and continue from the spec and repo."
+  speqq_run read read-memory "$RM_ORIENT_PCT" "$RM_TEMPLATE" ''
+  exit 0
+fi
+
 RM_BRANCH=$(git branch --show-current 2>/dev/null) || RM_BRANCH=''
 
 if [ -n "$RM_BRANCH" ]; then

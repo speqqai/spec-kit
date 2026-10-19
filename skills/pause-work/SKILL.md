@@ -7,6 +7,8 @@ description: Stop work on a spec cleanly. Writes one entry to the spec's memory 
 
 End a session so the next one starts from a record rather than from commits. An agent's context can end at any moment, and anything not written down is gone; this skill is the deliberate ending, the one where you write the record first.
 
+If the repository root names a shared memory in `.speqq` as `memory: @handle`, write the cross-team handoff there through Knowledge MCP `memory_write` with `kind: handoff`, the workspace ID, handle without `@`, and refs to known spec or PR keys. Keep the spec-specific pause note in `spec_memory_append`; do not rely on a short-lived `progress` entry for a durable handoff.
+
 ## Prerequisites
 
 - Speqq MCP must be connected. If a Speqq call fails with a connection or authentication error, run `check-connection` first.

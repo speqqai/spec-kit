@@ -69,6 +69,10 @@ Ask your agent: "Write a feature spec for PDF report export." `write-spec` creat
 
 The plugin keeps planning data in Speqq. Git branches and commits hold the code changes.
 
+## Shared memory
+
+When a repository has `.speqq` at its root with `memory: @handle`, the tokenless session hooks prompt the agent to read that shared Knowledge memory at the start of a session and write progress or a durable handoff as context fills. The plugin also registers `speqq-knowledge` at `https://speqq.com/mcp/knowledge`; authenticate it in the same harness as the Specs connection. The agent sends `memory_read` and `memory_write` over its own MCP connection. Spec-specific `MEMORY.md` remains available for the work timeline.
+
 ## Zero local state
 
 The skills write nothing to your machine except the deliverable itself — the branches and commits `implement-spec` produces.
@@ -82,7 +86,7 @@ The result: resume work from any machine or session, nothing to merge or go stal
 
 ## Supported harnesses
 
-The MCP server is `https://speqq.com/mcp/specs` everywhere; how it gets registered depends on the harness.
+The plugin registers `https://speqq.com/mcp/specs` for planning and `https://speqq.com/mcp/knowledge` for shared memory. How they are registered depends on the harness.
 
 | Harness | How Speqq MCP is set up |
 | --- | --- |

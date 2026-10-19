@@ -3,6 +3,10 @@
     "speqq": {
       "type": "http",
       "url": "https://speqq.com/mcp/specs"
+    },
+    "speqq-knowledge": {
+      "type": "http",
+      "url": "https://speqq.com/mcp/knowledge"
     }
   }
 }

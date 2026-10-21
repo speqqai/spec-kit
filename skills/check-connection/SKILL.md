@@ -21,8 +21,8 @@ A ladder, run top down: stop at the first rung that fixes it. Report every rung 
    - Listed already? The session just predates it. Skip to step 4.
    - Spec-Kit plugin installed (`claude plugin list` / `codex plugin list`)? The server ships with it. Skip to step 4, then run step 3 in the new session.
    - Truly missing? Register it, then go to step 3 for the first sign-in:
-     - Claude Code: `claude mcp add --scope user --transport http speqq https://speqq.com/mcp`
-     - Codex: `codex mcp add speqq --url https://speqq.com/mcp`. Run it if the harness allows, otherwise print it for the user.
+     - Claude Code: `claude mcp add --scope user --transport http speqq https://speqq.com/mcp/specs`
+     - Codex: `codex mcp add speqq --url https://speqq.com/mcp/specs`. Run it if the harness allows, otherwise print it for the user.
 3. **Authenticate if it's registered but not signed in.**
    - Claude Code: the agent can't do this part. Tell the user to run `/mcp`, select the `speqq` server, choose Authenticate, and finish the browser login.
    - Codex: run `codex mcp login speqq`. It opens the browser. If the sandbox refuses to run it, print the command for the user. If Codex answers that no such server exists, the server is plugin-owned: tell the user to authenticate it from the harness's MCP or plugin UI.

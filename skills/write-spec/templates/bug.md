@@ -2,7 +2,7 @@
 
 A bug spec is one page tab. Write it lean. Follow `../references/style-guide.md`.
 
-## Overview (page tab)
+## Page
 
 Lead with the failure. Then add these parts:
 
@@ -13,6 +13,6 @@ Lead with the failure. Then add these parts:
 
 Keep it to what is proven.
 
-## Requirements (table tab, only if the fix adds behavior)
+## Table: Requirements (rows only if the fix adds behavior)
 
 A pure fix needs no requirements. If the fix introduces new behavior, add it loose: one row that says what the new behavior does, what it does not, and its guardrails.

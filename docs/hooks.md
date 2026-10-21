@@ -24,10 +24,9 @@ window.
 
 1. **`read-product-context.sh` (orient).** Fires once per window while the
    window is near empty (measured fill below `SPEQQ_CONTEXT_ORIENT_PCT`,
-   default 10). Injects one instruction: orient by reading the product brief.
-   Call `spec_orient`, then `spec_read` the `product_file` pointer it returns
-   (PRODUCT.md). It reads the product node only, and never mentions the open
-   or active work.
+   default 10). Injects one instruction: call `list_workspaces`, then
+   `get_context` for product and repository context. If that tool is unavailable,
+   continue from the repo and active spec. It does not invent a product-file pointer.
 
 2. **`read-memory.sh` (recall).** Fires once per window at the same near-empty
    rung. Injects one instruction: resolve the active spec from the current git
@@ -48,9 +47,8 @@ window.
 4. **`prefer-knowledge-graph.sh` (knowledge-graph tip).** Fires once per
    session on `PostToolUse` after a filesystem search: a `Grep` or `Glob` tool
    call, or a `Bash` command that runs `grep`, `rg`, `ag`, or `find`. Injects one
-   recommendation: prefer `semantic_search_nodes`, `search_nodes`, or
-   `get_context` over filesystem grep and glob for understanding the codebase,
-   with grep and glob as the fallback when Speqq does not answer. Disable it
+   recommendation: try Speqq `get_context` or `search` for product and codebase
+   context, then continue with repository tools if they are unavailable. Disable it
    with `SPEQQ_READ_FIRST=0`.
 
 ## What fires them

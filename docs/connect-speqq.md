@@ -4,7 +4,7 @@ Every Spec-Kit skill reads from and writes to a Speqq workspace over MCP. Nothin
 
 On Claude Code and Codex the spec-kit plugin registers the Speqq MCP server for you, so connecting is just signing in with your browser (OAuth). On a folders-only install, or on Cursor and Gemini CLI, you register the server yourself first, then sign in. A bearer token is the alternative — for service accounts, shared machines, and harnesses without an OAuth flow. The optional session-hook extras carry their own one-line credential, covered in [Session hooks](hooks.md).
 
-The server is the same everywhere: **`https://speqq.com/mcp`** (streamable HTTP).
+The server is the same everywhere: **`https://speqq.com/mcp/specs`** (streamable HTTP).
 
 ## 1. Sign in with OAuth — no token
 
@@ -15,7 +15,7 @@ The plugin already registered the `speqq` server. Start a session, run `/mcp`, a
 Installed the skills as folders instead of the plugin? Register the server first, then sign in as above:
 
 ```bash
-claude mcp add --scope user --transport http speqq https://speqq.com/mcp
+claude mcp add --scope user --transport http speqq https://speqq.com/mcp/specs
 ```
 
 ### Codex CLI
@@ -25,7 +25,7 @@ The plugin already registered the `speqq` server. Run `codex mcp login speqq` an
 Installed the skills as folders instead of the plugin? Register the server first:
 
 ```bash
-codex mcp add speqq --url https://speqq.com/mcp
+codex mcp add speqq --url https://speqq.com/mcp/specs
 ```
 
 ### Cursor and Gemini CLI
@@ -45,7 +45,7 @@ The token scopes the connection to your Speqq account; the skills resolve the wo
 **Claude Code:**
 
 ```bash
-claude mcp add --transport http speqq https://speqq.com/mcp \
+claude mcp add --transport http speqq https://speqq.com/mcp/specs \
   --header "Authorization: Bearer <your-token>"
 ```
 
@@ -53,7 +53,7 @@ claude mcp add --transport http speqq https://speqq.com/mcp \
 
 ```toml
 [mcp_servers.speqq]
-url = "https://speqq.com/mcp"
+url = "https://speqq.com/mcp/specs"
 bearer_token_env_var = "SPEQQ_MCP_TOKEN"
 ```
 
@@ -73,7 +73,7 @@ Any of these confirms you're wired up:
 
 - Ask your agent to **list Speqq workspaces**. A working connection returns your workspace(s); that call (`list_workspaces`) is also the first call every skill makes.
 - Check your harness's MCP listing (for example `claude mcp list` in Claude Code) and confirm the Speqq server shows as connected.
-- Just run a skill — e.g. "spec this feature" to trigger `spec-product`. The preflight verifies the connection before anything is written and guides you if it's missing.
+- Just run a skill — e.g. "spec this feature" to trigger `write-spec`. The preflight verifies the connection before anything is written and guides you if it's missing.
 
 ## Troubleshooting
 

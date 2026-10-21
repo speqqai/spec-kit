@@ -20,7 +20,7 @@ codex plugin marketplace add speqqai/spec-kit
 codex plugin add spec-kit@speqq
 ```
 
-Start a new session after installing. On Claude Code the hooks are active immediately; on Codex, review and approve them once with `/hooks` — Codex never auto-trusts plugin hooks. The plugin also registers the Speqq MCP server, so there is no `mcp add` step — just sign in (`/mcp` on Claude Code, `codex mcp login speqq` on Codex), per [Connect Speqq](connect-speqq.md). Plugin skills are namespaced: `/spec-kit:write-spec` on Claude Code, `$spec-kit:write-spec` on Codex; plain-language requests trigger them the same as before.
+Start a new session after installing. On Claude Code the hooks are active immediately; on Codex, review and approve them once with `/hooks` — Codex never auto-trusts plugin hooks. The plugin registers both the Specs and Knowledge MCP servers, so there is no `mcp add` step — sign in to both when prompted (`/mcp` on Claude Code, `codex mcp login speqq` and `codex mcp login speqq-knowledge` on Codex), per [Connect Speqq](connect-speqq.md). Plugin skills are namespaced: `/spec-kit:write-spec` on Claude Code, `$spec-kit:write-spec` on Codex; plain-language requests trigger them the same as before.
 
 ## Install as folders — any harness
 
@@ -41,7 +41,7 @@ Installs are project-level by default. Useful flags:
 
 ## What gets installed
 
-The plugin installs the skills listed in [README](../README.md): scoping, writing, reviewing, queueing, implementation, drift checks, code review, connection repair, and session memory. It registers the Specs MCP at `https://speqq.com/mcp/specs` and the tokenless session hooks described in [hooks](hooks.md).
+The plugin installs the skills listed in [README](../README.md): scoping, writing, reviewing, queueing, implementation, drift checks, code review, connection repair, and session memory. It registers Specs MCP at `https://speqq.com/mcp/specs`, Knowledge MCP at `https://speqq.com/mcp/knowledge`, and the tokenless session hooks described in [hooks](hooks.md).
 
 ## Where skills land, per harness
 

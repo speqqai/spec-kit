@@ -7,6 +7,8 @@ description: Append a note to a spec's memory, the running log of what happened 
 
 Every spec keeps a memory: a running log of what happened while it was worked, in the order it happened. Read top to bottom, it tells the whole story of the feature, so a later session can pick the work up instead of reconstructing it from the code and the commits. This skill adds one note to that log on demand.
 
+If the repository root has `.speqq` with `memory: @handle`, it also identifies a shared Knowledge memory. For a team-wide decision, finding, or handoff, call `memory_write` on the Knowledge MCP with the selected `workspace_id`, the handle without `@`, the matching `kind`, and refs to known item keys or URLs. Keep spec-specific progress in `spec_memory_append` on the active spec. Read both destinations before writing so an entry goes where the user expects and is not duplicated.
+
 ## Prerequisites
 
 - Speqq MCP must be connected. If a Speqq call fails with a connection or authentication error, run `check-connection` first.

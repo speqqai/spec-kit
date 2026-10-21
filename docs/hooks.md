@@ -29,17 +29,19 @@ window.
    continue from the repo and active spec. It does not invent a product-file pointer.
 
 2. **`read-memory.sh` (recall).** Fires once per window at the same near-empty
-   rung. Injects one instruction: resolve the active spec from the current git
-   branch with `spec_orient`, then `spec_memory_read` it to catch up on the
-   story of the work so far. The hook reads the branch locally and names it in
-   the instruction when it can.
+   rung. If the repo root's `.speqq` contains `memory: @handle`, it asks the
+   live agent to call Knowledge MCP `memory_read` for that shared memory.
+   Otherwise it asks for `spec_orient` and `spec_memory_read` on the active
+   spec. The hook reads only local configuration and never calls MCP itself.
 
 3. **`append-memory.sh` (checkpoint ladder).** The checkpoint ladder, minus
    the near-empty rung the two read hooks own. Fires once each at the rungs in
    `SPEQQ_CONTEXT_NUDGE_PCT` (default `25,50,75,95`) as the window fills.
    Injects one instruction: find the queue item whose branch matches, take its
    linked spec, and append 2 to 4 sentences on where the work stands with
-   `spec_memory_append`. The early rungs say "checkpoint." The top rung (95),
+   `spec_memory_append` when no shared memory is configured. With a `.speqq`
+   handle, it asks the agent for a replaceable Knowledge `progress` entry at
+   early rungs and a durable `handoff` at the final rung. The early rungs say "checkpoint." The top rung (95),
    sitting just under auto-compaction, says "save now, while you still have
    full context." The memory log ends up reading top to bottom as the story of
    the session, written by the agent itself.

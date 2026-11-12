@@ -6,16 +6,13 @@ on:
 
 jobs:
   validate:
-    name: Validate plugin
+    name: Validate marketplace
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: ShellCheck the session hooks
-        run: shellcheck --severity=error hooks/*.sh
-
       - name: Install validation dependencies
         run: python3 -m pip install --quiet pyyaml
 
-      - name: Validate manifests, versions, skills, and hooks
+      - name: Validate marketplaces, plugin manifests, and skills
         run: python3 scripts/validate.py

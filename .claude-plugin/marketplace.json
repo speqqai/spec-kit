@@ -8,13 +8,13 @@
   },
   "plugins": [
     {
-      "name": "spec-kit",
-      "description": "Spec-driven development with Speqq: the full skill set, session hooks that orient every session in your workspace - one install.",
+      "name": "speqq",
+      "description": "Connects your agent to Speqq; the spec workflows arrive as slash commands from Speqq's server.",
       "author": {
         "name": "Speqq"
       },
       "homepage": "https://speqq.com",
-      "source": "./"
+      "source": "./plugins/speqq"
     }
   ]
 }

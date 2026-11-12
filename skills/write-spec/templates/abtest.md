@@ -2,7 +2,7 @@
 
 An A/B test spec is an experiment doc. It says what you are testing, why, the arms you compare, how you measure them, and, once it runs, what happened. Keep every part to a few plain sentences or a table. Follow `../references/style-guide.md` for the writing.
 
-## Overview (page tab)
+## Overview (the page)
 
 Write these parts in order. The first parts before the test, the results after.
 
@@ -15,7 +15,7 @@ Write these parts in order. The first parts before the test, the results after.
 7. **Duration and size.** How long it runs, and the sample it needs to call a result.
 8. **Ship or kill.** The rule you commit to before the data lands: which result ships the candidate, which kills it.
 
-## Results (table tab, filled in after the test runs)
+## Results (the table, filled in after the test runs)
 
 One row per arm: the primary metric, the change against the base arm, the guardrails, and the confidence. End with the decision.
 

@@ -1,8 +1,0 @@
-{
-  "name": "spec-kit",
-  "version": "0.4.3",
-  "description": "Spec-driven development with Speqq: the full skill set, session hooks, and the Speqq MCP connection - one install.",
-  "skills": "./skills/",
-  "hooks": ["./hooks/codex.plugin.hooks.json"],
-  "mcpServers": "./.codex-plugin/mcp.json"
-}

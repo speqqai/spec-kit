@@ -1,0 +1,11 @@
+{
+  "name": "speqq",
+  "version": "1.0.0",
+  "description": "Connects Codex to Speqq; the spec workflows arrive as slash commands from Speqq's server.",
+  "author": {
+    "name": "Speqq",
+    "url": "https://speqq.com"
+  },
+  "homepage": "https://speqq.com",
+  "mcpServers": "./.codex-plugin/mcp.json"
+}

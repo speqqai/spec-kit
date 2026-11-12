@@ -1,20 +1,24 @@
 ---
 name: review-code
 description: Review code for quality and best practices after it's built. Check that the code is well built, not just that it matches the spec. Use it after implementing a spec, or when a user wants a code review.
+metadata:
+  arguments:
+    - name: spec
+      description: The spec's id, short ref (e.g. SPQ-42) or URL. Optional context for the review.
 ---
 
 # Review code
 
 Check that code is well built. This is a quality review, separate from `check-drift`, which checks the code against the spec. Report findings and rank them by severity. Don't change the code without asking.
 
-## Prerequisites
+## Before you start
 
-- Speqq MCP must be connected. If a Speqq call fails with a connection or authentication error, run `check-connection` first.
-- A working tree to review. Speqq is optional here, used only to read the spec's requirements for context through `spec_read`.
+- A working tree to review.
+- Speqq is optional here. If a `spec` was given, call `get_spec` to read its requirements for context. If a Speqq call fails because you are not signed in, review without it.
 
 ## Steps
 
-1. **Scope the review.** Read the changed files with your own tools. Read the repo's own standards and convention docs first, and treat them as the bar.
+1. **Scope the review.** Read the changed files with your own tools (`git diff` against the base branch shows them). Read the repo's own standards and convention docs first, and treat them as the bar.
 2. **Check the code.** Look for:
    - Correctness and edge cases.
    - The repo's own patterns, not imported ones.

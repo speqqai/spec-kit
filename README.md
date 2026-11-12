@@ -43,4 +43,4 @@ The folders in `skills/` are the source of Speqq's built-in skills. Speqq syncs 
 
 ## Help
 
-https://speqq.com/help
+https://speqq.com/docs/skills
